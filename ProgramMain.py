@@ -1,9 +1,9 @@
 import cv2
 import unittest2 as unittest
 import FileIO as fileIO
+import ObjectDetect as objectDetect
 from matplotlib import pyplot as plt
-
-print "Hello World, We will check your project Setting"
+import numpy as np
 
 class ProjectSettingTest(unittest.TestCase):
 
@@ -12,10 +12,24 @@ class ProjectSettingTest(unittest.TestCase):
 
 class ProjectCalculateLength(unittest.TestCase):
 
-    def ImageLoadTest(self):
-        self.assertNotEqual(fileIO.LoadImage("Resources/beforeImage.png"), None)
+    def MakeBlankImage(self):
+        global blankImage
+        blankImage = np.zeros((1280, 720, 3), np.uint8)
+
+    def BeforeImageLoadTest(self):
+        global beforeImage, blankImage
+        beforeImage = fileIO.LoadImage("Resources/beforeImage.png")
+        self.assertNotEqual(beforeImage, blankImage)
+
+    def AfterImageLoadTest(self):
+        global afterImage, blankImage
+        afterImage = fileIO.LoadImage("Resources/afterImage.png")
+        self.assertNotEqual(afterImage, blankImage)
+
 
 testSuite = unittest.TestSuite()
 testSuite.addTest(ProjectSettingTest('TestVersionOfOpenCV'))
-testSuite.addTest(ProjectCalculateLength('ImageLoadTest'))
+testSuite.addTest(ProjectCalculateLength('MakeBlankImage'))
+testSuite.addTest(ProjectCalculateLength('BeforeImageLoadTest'))
+testSuite.addTest(ProjectCalculateLength('AfterImageLoadTest'))
 unittest.TextTestRunner(verbosity=2).run(testSuite)
