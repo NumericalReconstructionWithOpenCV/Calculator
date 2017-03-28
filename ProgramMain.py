@@ -26,10 +26,14 @@ class ProjectCalculateLength(unittest.TestCase):
         afterImage = fileIO.LoadImage("Resources/afterImage.png")
         self.assertNotEqual(afterImage, blankImage)
 
+    def ObjectDetectFromImage(self):
+        global beforeImage, afterImage, blankImage
+        self.assertEqual(objectDetect.DetectObjectFromImage(beforeImage, afterImage), [])
 
 testSuite = unittest.TestSuite()
 testSuite.addTest(ProjectSettingTest('TestVersionOfOpenCV'))
 testSuite.addTest(ProjectCalculateLength('MakeBlankImage'))
 testSuite.addTest(ProjectCalculateLength('BeforeImageLoadTest'))
 testSuite.addTest(ProjectCalculateLength('AfterImageLoadTest'))
+testSuite.addTest(ProjectCalculateLength('ObjectDetectFromImage'))
 unittest.TextTestRunner(verbosity=2).run(testSuite)
