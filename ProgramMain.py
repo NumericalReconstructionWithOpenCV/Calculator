@@ -12,6 +12,9 @@ class ProjectSettingTest(unittest.TestCase):
 
 class ProjectCalculateLength(unittest.TestCase):
 
+    def TestingDetecting(self):
+        objectDetect.Detecting()
+
     def MakeBlankImage(self):
         global blankImage
         blankImage = np.zeros((1280, 720, 3), np.uint8)
@@ -36,4 +39,5 @@ testSuite.addTest(ProjectCalculateLength('MakeBlankImage'))
 testSuite.addTest(ProjectCalculateLength('BeforeImageLoadTest'))
 testSuite.addTest(ProjectCalculateLength('AfterImageLoadTest'))
 testSuite.addTest(ProjectCalculateLength('ObjectDetectFromImage'))
+testSuite.addTest(ProjectCalculateLength('TestingDetecting'))
 unittest.TextTestRunner(verbosity=2).run(testSuite)
