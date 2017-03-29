@@ -6,11 +6,11 @@ def DetectObjectFromImage(beforeImage, afterImage):
     return []
 
 def Detecting():
-    beforeImage = cv2.imread('Resource/beforeImage.png')
+    beforeImage = cv2.imread('Resources/beforeImage.png')
 
     beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
-    afterImage = cv2.imread('Resource/afterImage.png')
+    afterImage = cv2.imread('Resources/afterImage.png')
 
     afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
 
