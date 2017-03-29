@@ -1,5 +1,5 @@
 import cv2
-import unittest2 as unittest
+import unittest
 import FileIO as fileIO
 import ObjectDetect as objectDetect
 from matplotlib import pyplot as plt
