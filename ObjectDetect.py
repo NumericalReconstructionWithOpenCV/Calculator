@@ -12,11 +12,11 @@ def Detecting():
 
     afterGrayImage = cv2.imread('Resources/afterImage.png',0)
 
-    #cv2.imwrite('Testing.jpg',afterGrayImage)
+    cv2.imwrite('Testing.png',afterGrayImage)
 
     #afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
 
-    #plt.imshow(afterGrayImage, cmap="gray")
+    #plt.imshow(afterGrayImage)
 
     differenceBetweenLoadedImages = cv2.absdiff(beforeGrayImage, afterGrayImage)
 
@@ -51,4 +51,4 @@ def Detecting():
 
     cv2.rectangle(beforeGrayImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
 
-    cv2.imwrite('Resources/End',beforeGrayImage, cmap="gray")
+    cv2.imwrite('Resources/End.png',beforeGrayImage)
