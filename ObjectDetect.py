@@ -6,15 +6,17 @@ def DetectObjectFromImage(beforeImage, afterImage):
     return []
 
 def Detecting():
-    beforeImage = cv2.imread('Resources/beforeImage.png')
+    beforeGrayImage = cv2.imread('Resources/beforeImage.png',0)
 
-    beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
+    #beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
-    afterImage = cv2.imread('Resources/afterImage.png')
+    afterGrayImage = cv2.imread('Resources/afterImage.png',0)
 
-    afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
+    #cv2.imwrite('Testing.jpg',afterGrayImage)
 
-    plt.imshow(afterGrayImage, cmap="gray")
+    #afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
+
+    #plt.imshow(afterGrayImage, cmap="gray")
 
     differenceBetweenLoadedImages = cv2.absdiff(beforeGrayImage, afterGrayImage)
 
