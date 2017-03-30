@@ -6,14 +6,10 @@ def DetectObjectFromImage(beforeImage, afterImage):
     return []
 
 def Detecting():
-    beforeGrayImage = cv2.imread('Resources/beforeImage.png',0)
-
+    beforeGrayImage = cv2.imread('Resources/testcase2/before.jpg', 0)
     #beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
-    afterGrayImage = cv2.imread('Resources/afterImage.png',0)
-
-    cv2.imwrite('Testing.png',afterGrayImage)
-
+    afterGrayImage = cv2.imread('Resources/testcase2/after.jpg', 0)
     #afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
 
     #plt.imshow(afterGrayImage)
@@ -22,11 +18,11 @@ def Detecting():
 
     differenceBetweenLoadedImages[differenceBetweenLoadedImages > 0] = 255
 
+    cv2.imwrite("Resources/testcase2/result_absdiff.jpg", differenceBetweenLoadedImages)
+
     blurKernel = cv2.GaussianBlur(differenceBetweenLoadedImages, (3, 3), 0)
 
     differenceBetweenLoadedImages = cv2.adaptiveThreshold(differenceBetweenLoadedImages, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
-
-    plt.imshow(differenceBetweenLoadedImages, cmap="gray")
 
     imageEdgesDetected = cv2.Canny(differenceBetweenLoadedImages, 0, 255)
 
@@ -40,15 +36,13 @@ def Detecting():
         if maxContoursArea < calculatedContourArea:
             maxContoursArea = calculatedContourArea
             maxContoursIndex = contoursIndex
-    print maxContoursIndex, maxContoursArea
 
-    cv2.drawContours(beforeGrayImage, [maxContoursIndex], 0, 255, 3)
-
-    plt.imshow(beforeGrayImage, cmap="gray")
+    cv2.drawContours(beforeGrayImage, contours, 0, 255, 3)
 
     (positionX, positionY, width, height) = cv2.boundingRect(maxContoursIndex)
-    print positionX, positionY, width, height
 
     cv2.rectangle(beforeGrayImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
 
-    cv2.imwrite('Resources/End.png',beforeGrayImage)
+
+    cv2.imwrite("Resources/testcase2/result_canny.jpg", imageEdgesDetected)
+    #cv2.imwrite("Resources/testcase2/result.jpg", beforeGrayImage)
