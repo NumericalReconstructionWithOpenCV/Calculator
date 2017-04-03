@@ -3,22 +3,34 @@ import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
 
-def DetectObjectFromImage(beforeImage, afterImage):
-    beforeGrayImage = cv2.imread(beforeImage, 0)
+def DetectObjectFromImage(testcase):
+    beforeImage = cv2.imread(testcase + "before.jpg")
     # beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
-    afterGrayImage = cv2.imread(afterImage, 0)
+    afterImage = cv2.imread(testcase + "after.jpg")
     # afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
 
-    mask = ColorDetect.ColorDetectFromImage(beforeImage)
+    mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
 
     # plt.imshow(afterGrayImage)
 
-    differenceBetweenLoadedImages = cv2.absdiff(beforeGrayImage, afterGrayImage)
+    differenceBetweenLoadedImages = cv2.absdiff(beforeImage, afterImage)
 
-    differenceBetweenLoadedImages[differenceBetweenLoadedImages > 30] = 255
+    diff = afterImage - beforeImage
 
-    cv2.imwrite("Resources/testcase5/result_absdiff.jpg", differenceBetweenLoadedImages)
+    differenceBetweenLoadedImages[differenceBetweenLoadedImages > 40] = 255
+
+    differenceBetweenLoadedImages = cv2.cvtColor(differenceBetweenLoadedImages, cv2.COLOR_BGR2GRAY)
+
+
+
+    last_result = differenceBetweenLoadedImages - mask
+
+    cv2.imwrite((testcase + "result_absdiff.jpg"), differenceBetweenLoadedImages)
+
+    cv2.imwrite((testcase + "result_mask.jpg"), mask)
+
+    cv2.imwrite((testcase + "result_diff2.jpg"), last_result)
 
     blurKernel = cv2.GaussianBlur(differenceBetweenLoadedImages, (3, 3), 0)
 
@@ -38,16 +50,16 @@ def DetectObjectFromImage(beforeImage, afterImage):
             maxContoursArea = calculatedContourArea
             maxContoursIndex = contoursIndex
 
-    cv2.drawContours(beforeGrayImage, contours, 0, 255, 3)
+    cv2.drawContours(beforeImage, contours, 0, 255, 3)
 
     (positionX, positionY, width, height) = cv2.boundingRect(maxContoursIndex)
 
-    cv2.rectangle(beforeGrayImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
+    cv2.rectangle(beforeImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
 
-    cv2.imwrite("Resources/testcase5/result_canny.jpg", imageEdgesDetected)
     # cv2.imwrite("Resources/testcase2/result.jpg", beforeGrayImage)
 
 def Detecting():
+    """
     beforeGrayImage = cv2.imread('Resources/testcase5/before.jpg', 0)
     #beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
@@ -88,3 +100,4 @@ def Detecting():
 
     cv2.imwrite("Resources/testcase5/result_canny.jpg", imageEdgesDetected)
     #cv2.imwrite("Resources/testcase2/result.jpg", beforeGrayImage)
+    """

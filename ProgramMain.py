@@ -21,17 +21,17 @@ class ProjectCalculateLength(unittest.TestCase):
 
     def BeforeImageLoadTest(self):
         global beforeImage, blankImage
-        beforeImage = "Resources/testcase5/before.png"
+        beforeImage = "Resources/testcase4/before.png"
         self.assertNotEqual(beforeImage, blankImage)
 
     def AfterImageLoadTest(self):
         global afterImage, blankImage
-        afterImage = "Resources/testcase5/after.png"
+        afterImage = "Resources/testcase4/after.png"
         self.assertNotEqual(afterImage, blankImage)
 
     def ObjectDetectFromImage(self):
         global beforeImage, afterImage, blankImage
-        objectDetect.DetectObjectFromImage(beforeImage, afterImage)
+        objectDetect.DetectObjectFromImage("Resources/testcase7/")
 
 testSuite = unittest.TestSuite()
 testSuite.addTest(ProjectSettingTest('TestVersionOfOpenCV'))
