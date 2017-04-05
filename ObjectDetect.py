@@ -1,7 +1,16 @@
 import cv2
+import numpy as np
 import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
+
+def Show(image,key=0):
+    cnt = len(image)
+    print cnt
+    for k in range(cnt):
+        string = 'image' + str(k)
+        cv2.imshow(string, image[k])
+    cv2.waitKey(key)
 
 def DetectObjectFromImage(beforeImage, afterImage):
     beforeGrayImage = cv2.imread(beforeImage, 0)
@@ -13,6 +22,11 @@ def DetectObjectFromImage(beforeImage, afterImage):
     mask = ColorDetect.ColorDetectFromImage(beforeImage)
 
     # plt.imshow(afterGrayImage)
+
+    kernel = np.ones((7, 7), np.uint8)
+    beforeGrayImage = cv2.morphologyEx(beforeGrayImage,cv2.MORPH_OPEN,kernel)
+    afterGrayImage = cv2.morphologyEx(afterGrayImage,cv2.MORPH_OPEN,kernel)
+    Show([beforeGrayImage,afterGrayImage])
 
     differenceBetweenLoadedImages = cv2.absdiff(beforeGrayImage, afterGrayImage)
 
