@@ -2,6 +2,7 @@ import cv2
 import unittest
 import FileIO as fileIO
 import ObjectDetect as objectDetect
+import FindCorner
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -11,7 +12,6 @@ class ProjectSettingTest(unittest.TestCase):
         self.assertEqual(cv2.__version__, "3.2.0", "Wrong Version Installed")
 
 class ProjectCalculateLength(unittest.TestCase):
-
     def TestingDetecting(self):
         objectDetect.Detecting()
 
@@ -33,11 +33,15 @@ class ProjectCalculateLength(unittest.TestCase):
         global beforeImage, afterImage, blankImage
         objectDetect.DetectObjectFromImage("Resources/testcase7/")
 
+    def FindCornerFromImage(self):
+        FindCorner.FindCornerFromImage("Resources/testcase7/")
+
 testSuite = unittest.TestSuite()
 testSuite.addTest(ProjectSettingTest('TestVersionOfOpenCV'))
 testSuite.addTest(ProjectCalculateLength('MakeBlankImage'))
 testSuite.addTest(ProjectCalculateLength('BeforeImageLoadTest'))
 testSuite.addTest(ProjectCalculateLength('AfterImageLoadTest'))
 testSuite.addTest(ProjectCalculateLength('ObjectDetectFromImage'))
+testSuite.addTest(ProjectCalculateLength('FindCornerFromImage'))
 #testSuite.addTest(ProjectCalculateLength('TestingDetecting'))
 unittest.TextTestRunner(verbosity=2).run(testSuite)
