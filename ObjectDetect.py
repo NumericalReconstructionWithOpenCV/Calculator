@@ -12,23 +12,38 @@ def Show(image,key=0):
         cv2.imshow(string, image[k])
     cv2.waitKey(key)
 
+def GrayImage(before,after):
+    kernel = np.ones((7, 7), np.uint8)
+    beforeGray = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
+    afterGray = cv2.cvtColor(after, cv2.COLOR_BGR2GRAY)
+    beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
+    afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
+    difference = cv2.absdiff(before, after)
+    difference[difference > 30] = 255
+    blurImage = cv2.GaussianBlur(beforeGray, (3, 3), 0)
+    blurImage = cv2.adaptiveThreshold(blurImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
+    edges = cv2.Canny(blurImage,50,150,apertureSize = 3)
+    Show([edges])
+    minLineLength = 10
+    maxLineGap = 10
+    lines = cv2.HoughLinesP(edges,1,np.pi/180, 30, minLineLength, maxLineGap)
+
+    lineImage = before
+    for x1,y1,x2,y2 in lines[0]:
+        cv2.line(lineImage,(x1,y1),(x2,y2),(0,255,0),2)
+
+    Show([lineImage])
+
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")
-    beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
     afterImage = cv2.imread(testcase + "after.jpg")
-    afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
 
     mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
 
     # plt.imshow(afterGrayImage)
 
-    kernel = np.ones((7, 7), np.uint8)
-    beforeGrayImage = cv2.morphologyEx(beforeGrayImage,cv2.MORPH_OPEN,kernel)
-    afterGrayImage = cv2.morphologyEx(afterGrayImage,cv2.MORPH_OPEN,kernel)
-    differenceBetweenGrayImages = cv2.absdiff(beforeGrayImage,afterGrayImage)
-    differenceBetweenGrayImages[differenceBetweenGrayImages > 30] = 255
-    Show([beforeGrayImage,afterGrayImage,differenceBetweenGrayImages])
+    GrayImage(beforeImage, afterImage)
 
     differenceBetweenLoadedImages = cv2.absdiff(beforeImage, afterImage)
 
@@ -38,12 +53,9 @@ def DetectObjectFromImage(testcase):
 
     differenceBetweenLoadedImages = cv2.cvtColor(differenceBetweenLoadedImages, cv2.COLOR_BGR2GRAY)
 
-
-
     last_result = differenceBetweenLoadedImages - mask
 
     cv2.imwrite((testcase + "result_absdiff.jpg"), differenceBetweenLoadedImages)
-    cv2.imwrite((testcase + "result_absdiff_Gray.jpg"), differenceBetweenGrayImages)
 
     cv2.imwrite((testcase + "result_mask.jpg"), mask)
 
