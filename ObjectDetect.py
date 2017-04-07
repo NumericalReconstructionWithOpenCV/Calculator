@@ -14,19 +14,21 @@ def Show(image,key=0):
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")
-    # beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
+    beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
 
     afterImage = cv2.imread(testcase + "after.jpg")
-    # afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
+    afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
 
     mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
 
     # plt.imshow(afterGrayImage)
 
     kernel = np.ones((7, 7), np.uint8)
-    beforeGrayImage = cv2.morphologyEx(beforeImage,cv2.MORPH_OPEN,kernel)
-    afterGrayImage = cv2.morphologyEx(afterImage,cv2.MORPH_OPEN,kernel)
-    Show([beforeGrayImage,afterGrayImage])
+    beforeGrayImage = cv2.morphologyEx(beforeGrayImage,cv2.MORPH_OPEN,kernel)
+    afterGrayImage = cv2.morphologyEx(afterGrayImage,cv2.MORPH_OPEN,kernel)
+    differenceBetweenGrayImages = cv2.absdiff(beforeGrayImage,afterGrayImage)
+    differenceBetweenGrayImages[differenceBetweenGrayImages > 30] = 255
+    Show([beforeGrayImage,afterGrayImage,differenceBetweenGrayImages])
 
     differenceBetweenLoadedImages = cv2.absdiff(beforeImage, afterImage)
 
@@ -41,6 +43,7 @@ def DetectObjectFromImage(testcase):
     last_result = differenceBetweenLoadedImages - mask
 
     cv2.imwrite((testcase + "result_absdiff.jpg"), differenceBetweenLoadedImages)
+    cv2.imwrite((testcase + "result_absdiff_Gray.jpg"), differenceBetweenGrayImages)
 
     cv2.imwrite((testcase + "result_mask.jpg"), mask)
 
