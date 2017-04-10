@@ -13,20 +13,39 @@ def Show(image,key=0):
     cv2.waitKey(key)
 
 def GrayImage(before,after):
+    #before :  Resources/testcase5/before.JPG
+    #after : Resources/testcase5/after.JPG
+
+    MORPHOLOGY_MASK_SIZE = 5
+    BLUR_MASK_SIZE = 1
+    EACH_IMAGE_DIFFERENCE_THRESHOLD = 30
+    SET_IMAGE_WHITE_COLOR = 255
+    NEIGHBORHOOD_MASK_SIZE = 7
+    CANNY_MINIMUM_THRESHOLD = 0
+    CANNY_MAXIMUM_THRESHOLD = 255
+    GET_MAXIMUM_AREA_SIZE = 5
+    SQUARE_CORNER_NUM = 4
+
     lineImage = before
+    # Line detect image
+
     beforeGray = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
     afterGray = cv2.cvtColor(after, cv2.COLOR_BGR2GRAY)
-    kernel = np.ones((5, 5), np.uint8)
-    beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
-    cv2.imwrite('Morphology.png',beforeGray)
+    # Change color to gray
 
-    beforeGray = cv2.morphologyEx(before, cv2.MORPH_OPEN, kernel)
+    kernel = np.ones((MORPHOLOGY_MASK_SIZE, MORPHOLOGY_MASK_SIZE), np.uint8)
+    beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
+    #beforeGray = cv2.morphologyEx(before, cv2.MORPH_OPEN, kernel)
+    afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
+    # Reduce image noise
+
+    difference = cv2.absdiff(beforeGray, afterGray)
+    difference[difference > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
+    # Dectect each image difference
+
+    '''
     splitImage = []
     splitImage = cv2.split(beforeGray)
-
-    afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
-    difference = cv2.absdiff(beforeGray, afterGray)
-    difference[difference > 30] = 255
 
     for color in splitImage:
         color = cv2.GaussianBlur(color, (3,3), 0)
@@ -47,11 +66,41 @@ def GrayImage(before,after):
                 for i in approx:
                     x, y = i.ravel()
                     cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
+    '''
 
-    blurImage = cv2.GaussianBlur(beforeGray, (3, 3), 0)
-    blurImage = cv2.adaptiveThreshold(blurImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
-    _, contours, h = cv2.findContours(blurImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    edges = cv2.Canny(blurImage, 50, 150,apertureSize = 3)
+    #blurImage = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
+    # Reduce image noise, 0 : border type (idk)
+
+    blurImage = cv2.adaptiveThreshold(beforeGray, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                      cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
+    # Get small size of block's threshold value
+
+    edges = cv2.Canny(blurImage, CANNY_MINIMUM_THRESHOLD, CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
+    cv2.imwrite("cannyEdgeDetectedImage.jpg", edges)
+    # Edge detect from bulr processed image
+    (_, contours, h) = cv2.findContours(blurImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    # Get image contour
+
+    foundedMaxAreaSizeContours = sorted(contours, key=cv2.contourArea, reverse=True)[:GET_MAXIMUM_AREA_SIZE]
+
+    squareContourData = []
+
+    for indexOfContour in foundedMaxAreaSizeContours:
+        peri = cv2.arcLength(indexOfContour, True)
+        approx = cv2.approxPolyDP(indexOfContour, 0.02 * peri, True)
+
+        if len(approx) == SQUARE_CORNER_NUM:
+            squareContourData = approx
+            print "contour data"
+            print squareContourData
+            break
+
+    beforeBack = before
+
+    cv2.drawContours(beforeBack, squareContourData, -1, (0, 255, 0), 2)
+    cv2.imshow("test", beforeBack)
+    cv2.imwrite("maximumAreaDetectedImage.jpg", beforeBack)
+
     Show([edges])
     cv2.imwrite('ThresholdImage.png',blurImage)
 
@@ -64,7 +113,7 @@ def GrayImage(before,after):
             print "triangle"
             cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
         elif len(approx) == 4 :
-            print approx
+            #print approx
             cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
             for i in approx:
                 x, y = i.ravel()
