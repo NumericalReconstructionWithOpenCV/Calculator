@@ -13,43 +13,62 @@ def Show(image,key=0):
     cv2.waitKey(key)
 
 def GrayImage(before,after):
-    kernel = np.ones((7, 7), np.uint8)
+    lineImage = before
     beforeGray = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
     afterGray = cv2.cvtColor(after, cv2.COLOR_BGR2GRAY)
+    kernel = np.ones((5, 5), np.uint8)
     beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
+    cv2.imwrite('Morphology.png',beforeGray)
+
+    beforeGray = cv2.morphologyEx(before, cv2.MORPH_OPEN, kernel)
+    splitImage = []
+    splitImage = cv2.split(beforeGray)
+
     afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
-    difference = cv2.absdiff(before, after)
+    difference = cv2.absdiff(beforeGray, afterGray)
     difference[difference > 30] = 255
+
+    for color in splitImage:
+        color = cv2.GaussianBlur(color, (3,3), 0)
+        color = cv2.adaptiveThreshold(color, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
+        _, c, h = cv2.findContours(color, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        for count in c:
+            approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
+            if len(approx) == 5 :
+                print "pentagon"
+                cv2.drawContours(lineImage, [count], 0, (255, 0, 0), -1)
+            elif len(approx) == 3 :
+                print "triangle"
+                cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
+            elif len(approx) == 4 :
+                print approx
+                cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
+                for i in approx:
+                    x, y = i.ravel()
+                    cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
+
     blurImage = cv2.GaussianBlur(beforeGray, (3, 3), 0)
     blurImage = cv2.adaptiveThreshold(blurImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
-    edges = cv2.Canny(blurImage,50,150,apertureSize = 3)
+    _, contours, h = cv2.findContours(blurImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    edges = cv2.Canny(blurImage, 50, 150,apertureSize = 3)
     Show([edges])
-    lineImage = before
+    cv2.imwrite('ThresholdImage.png',blurImage)
 
-    """
-    lines = cv2.HoughLines(edges, 1, np.pi / 180, 250)
-    for line in lines:
-        for rho, theta in line:
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            x1 = int(x0 + 1000 * (-b))
-            y1 = int(y0 + 1000 * (a))
-            x2 = int(x0 - 1000 * (-b))
-            y2 = int(y0 - 1000 * (a))
-            cv2.line(lineImage, (x1, y1), (x2, y2), (0, 0, 255), 2)
-    """
-
-    """
-    minLineLength = 1000
-    maxLineGap = 100
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 10, minLineLength, maxLineGap)
-
-    for _line in lines:
-        for x1,y1,x2,y2 in _line:
-            cv2.line(lineImage,(x1,y1),(x2,y2),(0,255,0),2)
-    """
+    for count in contours:
+        approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
+        if len(approx) == 5 :
+            print "pentagon"
+            cv2.drawContours(lineImage, [count], 0, (255, 0, 0), -1)
+        elif len(approx) == 3 :
+            print "triangle"
+            cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
+        elif len(approx) == 4 :
+            print approx
+            cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
+            for i in approx:
+                x, y = i.ravel()
+                cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
     Show([lineImage])
 
