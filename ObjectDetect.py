@@ -24,13 +24,32 @@ def GrayImage(before,after):
     blurImage = cv2.adaptiveThreshold(blurImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
     edges = cv2.Canny(blurImage,50,150,apertureSize = 3)
     Show([edges])
-    minLineLength = 10
-    maxLineGap = 10
-    lines = cv2.HoughLinesP(edges,1,np.pi/180, 30, minLineLength, maxLineGap)
-
     lineImage = before
-    for x1,y1,x2,y2 in lines[0]:
-        cv2.line(lineImage,(x1,y1),(x2,y2),(0,255,0),2)
+
+    """
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, 250)
+    for line in lines:
+        for rho, theta in line:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            x1 = int(x0 + 1000 * (-b))
+            y1 = int(y0 + 1000 * (a))
+            x2 = int(x0 - 1000 * (-b))
+            y2 = int(y0 - 1000 * (a))
+            cv2.line(lineImage, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    """
+
+    """
+    minLineLength = 1000
+    maxLineGap = 100
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 10, minLineLength, maxLineGap)
+
+    for _line in lines:
+        for x1,y1,x2,y2 in _line:
+            cv2.line(lineImage,(x1,y1),(x2,y2),(0,255,0),2)
+    """
 
     Show([lineImage])
 
