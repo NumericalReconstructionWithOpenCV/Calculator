@@ -1,18 +1,24 @@
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
 
-def Show(title, image, key=0):
+def Show(image, title = [], key=0):
+    cv2.destroyAllWindows()
     cnt = len(image)
-    print cnt
     for k in range(cnt):
-        string = 'image' + str(k)
+        string = ''
+        if len(title) < k + 1:
+            string = 'image' + str(k)
+        else:
+            string = title[k]
         cv2.imshow(string, image[k])
     cv2.waitKey(key)
 
 def CropImageFromSquareData(canvas, squareContourData):
+    '''
     minx = 99999
     miny = 99999
     maxx = 0
@@ -31,6 +37,28 @@ def CropImageFromSquareData(canvas, squareContourData):
     h = maxy - miny
     croppedImage = canvas[miny:maxy, minx:maxx]
     return croppedImage
+    '''
+    topLeft = squareContourData[0][0]
+    topRight = squareContourData[3][0]
+    bottomRight = squareContourData[2][0]
+    bottomLeft = squareContourData[1][0]
+
+    pts1 = np.float32([topLeft, topRight, bottomRight, bottomLeft])
+
+    w1 = abs(bottomRight[0] - bottomLeft[0])
+    w2 = abs(topRight[0] - topLeft[0])
+    h1 = abs(topRight[1] - bottomRight[1])
+    h2 = abs(topLeft[1] - bottomLeft[1])
+    minWidth = min([w1, w2])
+    minHeight = min([h1, h2])
+
+    pts2 = np.float32([[0,0], [minWidth-1,0],
+                      [minWidth-1,minHeight-1], [0,minHeight-1]])
+
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+
+    result = cv2.warpPerspective(canvas, M, (int(minWidth), int(minHeight)))
+    return result
 
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
@@ -45,23 +73,17 @@ def GrayImage(before,after):
     CANNY_MAXIMUM_THRESHOLD = 255
     GET_MAXIMUM_AREA_SIZE = 5
     SQUARE_CORNER_NUM = 4
+    IMAGE_WIDTH = 294.0
 
     lineImage = before
     # Line detect image
 
-    beforeGray = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
-    afterGray = cv2.cvtColor(after, cv2.COLOR_BGR2GRAY)
+    grayImage = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
     # Change color to gray
 
     kernel = np.ones((MORPHOLOGY_MASK_SIZE, MORPHOLOGY_MASK_SIZE), np.uint8)
-    beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
-    #beforeGray = cv2.morphologyEx(before, cv2.MORPH_OPEN, kernel)
-    afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
+    grayImage = cv2.morphologyEx(grayImage, cv2.MORPH_OPEN, kernel)
     # Reduce image noise
-
-    difference = cv2.absdiff(beforeGray, afterGray)
-    difference[difference > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
-    # Dectect each image difference
 
     '''
     splitImage = []
@@ -91,7 +113,7 @@ def GrayImage(before,after):
     #blurImage = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
     # Reduce image noise, 0 : border type (idk)
 
-    blurImage = cv2.adaptiveThreshold(beforeGray, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+    blurImage = cv2.adaptiveThreshold(grayImage, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                       cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
     # Get small size of block's threshold value
 
@@ -122,13 +144,32 @@ def GrayImage(before,after):
     croppedBefore = CropImageFromSquareData(before, squareContourData)
     croppedAfter = CropImageFromSquareData(after, squareContourData)
 
-    cv2.imshow("croppedBefore", croppedBefore)
-    cv2.imshow("croppedAfter", croppedAfter)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-    cv2.imshow("edges", edges)
-    cv2.imwrite('Resources/ThresholdImage.png', blurImage)
+    height, width = croppedBefore.shape[:2]
+    rate = IMAGE_WIDTH / width
+    resizeBefore = cv2.resize(croppedBefore, (int(IMAGE_WIDTH),int(rate * height)))
+    height, width = croppedAfter.shape[:2]
+    rate = IMAGE_WIDTH / width
+    resizeAfter = cv2.resize(croppedAfter, (int(IMAGE_WIDTH),int(rate * height)))
+    # Resize Image
+
+    beforeGray = resizeBefore
+    afterGray = resizeAfter
+    beforeGray = cv2.cvtColor(resizeBefore, cv2.COLOR_BGR2GRAY)
+    afterGray = cv2.cvtColor(resizeAfter, cv2.COLOR_BGR2GRAY)
+    # Change color to gray
+
+    kernel = np.ones((MORPHOLOGY_MASK_SIZE + 1, MORPHOLOGY_MASK_SIZE + 1), np.uint8)
+    beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
+    afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
+    # Reduce image noise
+
+    Show([beforeGray,afterGray], ['before','after'])
+
+    difference = cv2.absdiff(beforeGray, afterGray)
+    difference[difference > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
+    # Detect each image difference
+
+    Show([resizeBefore, resizeAfter, difference], ['before','after','difference'])
 
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
@@ -145,10 +186,8 @@ def GrayImage(before,after):
                 x, y = i.ravel()
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-    cv2.imshow("lineImage", [lineImage])
+    #Show([lineImage])
+    return  resizeBefore, resizeAfter, difference
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")

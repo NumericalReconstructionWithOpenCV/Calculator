@@ -31,7 +31,7 @@ class ProjectCalculateLength(unittest.TestCase):
 
     def ObjectDetectFromImage(self):
         global beforeImage, afterImage, blankImage
-        objectDetect.DetectObjectFromImage("Resources/testcase7/")
+        objectDetect.DetectObjectFromImage("Resources/testcase5/")
 
     def FindCornerFromImage(self):
         FindCorner.FindCornerFromImage("Resources/testcase7/")
