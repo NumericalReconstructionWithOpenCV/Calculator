@@ -4,6 +4,8 @@ import numpy as np
 import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
+import ShapeDetectAndFindCorner
+import ImageMatrixMove
 
 def Show(image, title = [], key=0):
     cv2.destroyAllWindows()
@@ -139,10 +141,28 @@ def GrayImage(before,after):
 
     beforeBack = before[:]
 
+    # 사각형 자르기
     #cv2.drawContours(beforeBack, [squareContourData], 0, 255, -1)
     #cv2.drawContours(before, squareContourData, 0, (0, 255, 0), 2)
     croppedBefore = CropImageFromSquareData(before, squareContourData)
     croppedAfter = CropImageFromSquareData(after, squareContourData)
+
+    # 굴곡진 큰 사각형 정사각형으로 보정
+    BeforePerspective = ImageMatrixMove.ImageMatrixMove(before, squareContourData)
+    AfterPerspective = ImageMatrixMove.ImageMatrixMove(after, squareContourData)
+    cv2.imshow("BeforePerspective", BeforePerspective)
+    cv2.imshow("AfterPerspective", AfterPerspective)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # 작은 사각형과 그 모서리 찾기
+    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(BeforePerspective)
+    cv2.imshow("croppedBeforeCorner", croppedBeforeCorner)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    cv2.imshow("edges", edges)
+    cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
     height, width = croppedBefore.shape[:2]
     rate = IMAGE_WIDTH / width
