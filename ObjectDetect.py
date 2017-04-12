@@ -3,6 +3,7 @@ import numpy as np
 import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
+import ShapeDetectAndFindCorner
 
 def Show(title, image, key=0):
     cnt = len(image)
@@ -124,6 +125,11 @@ def GrayImage(before,after):
 
     cv2.imshow("croppedBefore", croppedBefore)
     cv2.imshow("croppedAfter", croppedAfter)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(croppedBefore)
+    cv2.imshow("croppedBeforeCorner", croppedBeforeCorner)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
