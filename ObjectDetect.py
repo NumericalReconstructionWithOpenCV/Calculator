@@ -4,6 +4,7 @@ import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
 import ShapeDetectAndFindCorner
+import ImageMatrixMove
 
 def Show(title, image, key=0):
     cnt = len(image)
@@ -127,12 +128,16 @@ def GrayImage(before,after):
     cv2.imshow("croppedAfter", croppedAfter)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.waitKey(1)
-    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(croppedBefore)
+    BeforePerspective = ImageMatrixMove.ImageMatrixMove(before, squareContourData)
+    AfterPerspective = ImageMatrixMove.ImageMatrixMove(after, squareContourData)
+    cv2.imshow("BeforePerspective", BeforePerspective)
+    cv2.imshow("AfterPerspective", AfterPerspective)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(BeforePerspective)
     cv2.imshow("croppedBeforeCorner", croppedBeforeCorner)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.waitKey(1)
     cv2.imshow("edges", edges)
     cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
