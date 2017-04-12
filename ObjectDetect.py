@@ -12,6 +12,26 @@ def Show(image,key=0):
         cv2.imshow(string, image[k])
     cv2.waitKey(key)
 
+def CropImageFromSquareData(canvas, squareContourData):
+    minx = 99999
+    miny = 99999
+    maxx = 0
+    maxy = 0
+    for i in squareContourData:
+        x, y = i.ravel()
+        if x < minx:
+            minx = x
+        if y < miny:
+            miny = y
+        if x > maxx :
+            maxx = x
+        if y > maxy :
+            maxy = y
+    w = maxx - minx
+    h = maxy - miny
+    croppedImage = canvas[miny:maxy, minx:maxx]
+    return croppedImage
+
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
     #after : Resources/testcase5/after.JPG
@@ -95,14 +115,21 @@ def GrayImage(before,after):
             print squareContourData
             break
 
-    beforeBack = before
+    beforeBack = before[:]
 
-    cv2.drawContours(beforeBack, squareContourData, -1, (0, 255, 0), 2)
-    cv2.imshow("test", beforeBack)
-    cv2.imwrite("maximumAreaDetectedImage.jpg", beforeBack)
+    #cv2.drawContours(beforeBack, [squareContourData], 0, 255, -1)
+    #cv2.drawContours(before, squareContourData, 0, (0, 255, 0), 2)
+    croppedImage = CropImageFromSquareData(before, squareContourData)
+    Show([croppedImage])
+    mask = np.zeros_like(before)  # Create mask where white is what we want, black otherwise
+    out = np.zeros_like(beforeBack)  # Extract out the object and place into output image
+    out[mask == 255] = before[mask == 255]
+
+    # Show the output image
+    Show([out])
 
     Show([edges])
-    cv2.imwrite('ThresholdImage.png',blurImage)
+    cv2.imwrite('Resources/ThresholdImage.png',blurImage)
 
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
