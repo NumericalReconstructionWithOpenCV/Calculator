@@ -121,12 +121,6 @@ def GrayImage(before,after):
     #cv2.drawContours(before, squareContourData, 0, (0, 255, 0), 2)
     croppedImage = CropImageFromSquareData(before, squareContourData)
     Show([croppedImage])
-    mask = np.zeros_like(before)  # Create mask where white is what we want, black otherwise
-    out = np.zeros_like(beforeBack)  # Extract out the object and place into output image
-    out[mask == 255] = before[mask == 255]
-
-    # Show the output image
-    Show([out])
 
     Show([edges])
     cv2.imwrite('Resources/ThresholdImage.png',blurImage)
