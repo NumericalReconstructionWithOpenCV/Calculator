@@ -4,7 +4,7 @@ import unittest2 as unittest
 from matplotlib import pyplot as plt
 import ColorDetect
 
-def Show(image,key=0):
+def Show(title, image, key=0):
     cnt = len(image)
     print cnt
     for k in range(cnt):
@@ -119,28 +119,36 @@ def GrayImage(before,after):
 
     #cv2.drawContours(beforeBack, [squareContourData], 0, 255, -1)
     #cv2.drawContours(before, squareContourData, 0, (0, 255, 0), 2)
-    croppedImage = CropImageFromSquareData(before, squareContourData)
-    Show([croppedImage])
+    croppedBefore = CropImageFromSquareData(before, squareContourData)
+    croppedAfter = CropImageFromSquareData(after, squareContourData)
 
-    Show([edges])
-    cv2.imwrite('Resources/ThresholdImage.png',blurImage)
+    cv2.imshow("croppedBefore", croppedBefore)
+    cv2.imshow("croppedAfter", croppedAfter)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    cv2.imshow("edges", edges)
+    cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
         if len(approx) == 5 :
-            print "pentagon"
+            # find pentagon
             cv2.drawContours(lineImage, [count], 0, (255, 0, 0), -1)
         elif len(approx) == 3 :
-            print "triangle"
+            # find triangle
             cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
         elif len(approx) == 4 :
-            #print approx
+            # find square
             cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
             for i in approx:
                 x, y = i.ravel()
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
-    Show([lineImage])
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    cv2.imshow("lineImage", [lineImage])
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")
@@ -194,47 +202,3 @@ def DetectObjectFromImage(testcase):
     cv2.rectangle(beforeImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
 
     # cv2.imwrite("Resources/testcase2/result.jpg", beforeGrayImage)
-
-def Detecting():
-    """
-    beforeGrayImage = cv2.imread('Resources/testcase5/before.jpg', 0)
-    #beforeGrayImage = cv2.cvtColor(beforeImage, cv2.COLOR_BGR2GRAY)
-
-    afterGrayImage = cv2.imread('Resources/testcase5/after.jpg', 0)
-    #afterGrayImage = cv2.cvtColor(afterImage, cv2.COLOR_BGR2GRAY)
-
-    #plt.imshow(afterGrayImage)
-
-    differenceBetweenLoadedImages = cv2.absdiff(beforeGrayImage, afterGrayImage)
-
-    differenceBetweenLoadedImages[differenceBetweenLoadedImages > 30] = 255
-
-    cv2.imwrite("Resources/testcase5/result_absdiff.jpg", differenceBetweenLoadedImages)
-
-    blurKernel = cv2.GaussianBlur(differenceBetweenLoadedImages, (3, 3), 0)
-
-    differenceBetweenLoadedImages = cv2.adaptiveThreshold(differenceBetweenLoadedImages, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
-
-    imageEdgesDetected = cv2.Canny(differenceBetweenLoadedImages, 0, 255)
-
-    _, contours, hierarchy = cv2.findContours(imageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    maxContoursArea = 0
-    calculatedContourArea = 0
-    maxContoursIndex = []
-    for contoursIndex in contours:
-        calculatedContourArea = cv2.contourArea(contoursIndex)
-        if maxContoursArea < calculatedContourArea:
-            maxContoursArea = calculatedContourArea
-            maxContoursIndex = contoursIndex
-
-    cv2.drawContours(beforeGrayImage, contours, 0, 255, 3)
-
-    (positionX, positionY, width, height) = cv2.boundingRect(maxContoursIndex)
-
-    cv2.rectangle(beforeGrayImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
-
-
-    cv2.imwrite("Resources/testcase5/result_canny.jpg", imageEdgesDetected)
-    #cv2.imwrite("Resources/testcase2/result.jpg", beforeGrayImage)
-    """
