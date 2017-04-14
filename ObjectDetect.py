@@ -150,18 +150,12 @@ def GrayImage(before,after):
     # 굴곡진 큰 사각형 정사각형으로 보정
     BeforePerspective = ImageMatrixMove.ImageMatrixMove(before, squareContourData)
     AfterPerspective = ImageMatrixMove.ImageMatrixMove(after, squareContourData)
-    cv2.imshow("BeforePerspective", BeforePerspective)
-    cv2.imshow("AfterPerspective", AfterPerspective)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    Show([BeforePerspective, AfterPerspective], ['BeforePerspective', 'AfterPerspective'])
 
     # 작은 사각형과 그 모서리 찾기
     croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(BeforePerspective)
-    cv2.imshow("croppedBeforeCorner", croppedBeforeCorner)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    Show([croppedBeforeCorner, edges], ['croppedBeforeCorner', ' edges'])
 
-    cv2.imshow("edges", edges)
     cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
     height, width = croppedBefore.shape[:2]
