@@ -19,12 +19,13 @@ def Show(image, title = [], key=0):
         cv2.imshow(string, image[k])
     cv2.waitKey(key)
 
+
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
     #after : Resources/testcase5/after.JPG
 
     MORPHOLOGY_MASK_SIZE = 5
-    BLUR_MASK_SIZE = 1
+    BLUR_MASK_SIZE = 3
     EACH_IMAGE_DIFFERENCE_THRESHOLD = 30
     SET_IMAGE_WHITE_COLOR = 255
     NEIGHBORHOOD_MASK_SIZE = 7
@@ -76,11 +77,12 @@ def GrayImage(before,after):
     # 굴곡진 큰 사각형 정사각형으로 보정
     BeforePerspective = ImageMatrixMove.ImageMatrixMove(before, squareContourData)
     AfterPerspective = ImageMatrixMove.ImageMatrixMove(after, squareContourData)
-    Show([BeforePerspective, AfterPerspective], ['BeforePerspective', 'AfterPerspective'])
+    #Show([BeforePerspective, AfterPerspective], ['BeforePerspective', 'AfterPerspective'])
 
     # 작은 사각형과 그 모서리 찾기
-    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(BeforePerspective)
-    Show([croppedBeforeCorner], ['croppedBeforeCorner'])
+    croppedBeforeCorner = np.copy(BeforePerspective)
+    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(croppedBeforeCorner)
+    #Show([croppedBeforeCorner, BeforePerspective], ['croppedBeforeCorner', 'BeforePerspective'])
 
     cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
@@ -103,13 +105,25 @@ def GrayImage(before,after):
     afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
     # Reduce image noise
 
-    Show([beforeGray,afterGray], ['before','after'])
+    differenceMorph = cv2.absdiff(beforeGray, afterGray)
+    differenceMorph[differenceMorph > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
+    # Detect each image difference from Morphology Image
 
-    difference = cv2.absdiff(beforeGray, afterGray)
-    difference[difference > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
-    # Detect each image difference
+    '''
+    beforeGray = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
+    ret, beforeGray = cv2.threshold(beforeGray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    afterGray = cv2.GaussianBlur(afterGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
+    ret, afterGray = cv2.threshold(afterGray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    '''
+    beforeThresh= cv2.adaptiveThreshold(beforeGray, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                     cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
+    afterThresh= cv2.adaptiveThreshold(afterGray, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                     cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
+    differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
+    differenceThresh[differenceThresh > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
 
-    Show([resizeBefore, resizeAfter, difference], ['before','after','difference'])
+    Show([differenceMorph, differenceThresh], ['Morph','Thresh'])
+    #Show([resizeBefore, resizeAfter, differenceMorph], ['before','after','difference'])
 
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
