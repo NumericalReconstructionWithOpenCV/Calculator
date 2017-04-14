@@ -19,49 +19,6 @@ def Show(image, title = [], key=0):
         cv2.imshow(string, image[k])
     cv2.waitKey(key)
 
-def CropImageFromSquareData(canvas, squareContourData):
-    '''
-    minx = 99999
-    miny = 99999
-    maxx = 0
-    maxy = 0
-    for i in squareContourData:
-        x, y = i.ravel()
-        if x < minx:
-            minx = x
-        if y < miny:
-            miny = y
-        if x > maxx :
-            maxx = x
-        if y > maxy :
-            maxy = y
-    w = maxx - minx
-    h = maxy - miny
-    croppedImage = canvas[miny:maxy, minx:maxx]
-    return croppedImage
-    '''
-    topLeft = squareContourData[0][0]
-    topRight = squareContourData[3][0]
-    bottomRight = squareContourData[2][0]
-    bottomLeft = squareContourData[1][0]
-
-    pts1 = np.float32([topLeft, topRight, bottomRight, bottomLeft])
-
-    w1 = abs(bottomRight[0] - bottomLeft[0])
-    w2 = abs(topRight[0] - topLeft[0])
-    h1 = abs(topRight[1] - bottomRight[1])
-    h2 = abs(topLeft[1] - bottomLeft[1])
-    minWidth = min([w1, w2])
-    minHeight = min([h1, h2])
-
-    pts2 = np.float32([[0,0], [minWidth-1,0],
-                      [minWidth-1,minHeight-1], [0,minHeight-1]])
-
-    M = cv2.getPerspectiveTransform(pts1, pts2)
-
-    result = cv2.warpPerspective(canvas, M, (int(minWidth), int(minHeight)))
-    return result
-
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
     #after : Resources/testcase5/after.JPG
@@ -86,31 +43,6 @@ def GrayImage(before,after):
     kernel = np.ones((MORPHOLOGY_MASK_SIZE, MORPHOLOGY_MASK_SIZE), np.uint8)
     grayImage = cv2.morphologyEx(grayImage, cv2.MORPH_OPEN, kernel)
     # Reduce image noise
-
-    '''
-    splitImage = []
-    splitImage = cv2.split(beforeGray)
-
-    for color in splitImage:
-        color = cv2.GaussianBlur(color, (3,3), 0)
-        color = cv2.adaptiveThreshold(color, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
-        _, c, h = cv2.findContours(color, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-        for count in c:
-            approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
-            if len(approx) == 5 :
-                print "pentagon"
-                cv2.drawContours(lineImage, [count], 0, (255, 0, 0), -1)
-            elif len(approx) == 3 :
-                print "triangle"
-                cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
-            elif len(approx) == 4 :
-                print approx
-                cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
-                for i in approx:
-                    x, y = i.ravel()
-                    cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
-    '''
 
     #blurImage = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
     # Reduce image noise, 0 : border type (idk)
@@ -141,12 +73,6 @@ def GrayImage(before,after):
 
     beforeBack = before[:]
 
-    # 사각형 자르기
-    #cv2.drawContours(beforeBack, [squareContourData], 0, 255, -1)
-    #cv2.drawContours(before, squareContourData, 0, (0, 255, 0), 2)
-    croppedBefore = CropImageFromSquareData(before, squareContourData)
-    croppedAfter = CropImageFromSquareData(after, squareContourData)
-
     # 굴곡진 큰 사각형 정사각형으로 보정
     BeforePerspective = ImageMatrixMove.ImageMatrixMove(before, squareContourData)
     AfterPerspective = ImageMatrixMove.ImageMatrixMove(after, squareContourData)
@@ -154,16 +80,16 @@ def GrayImage(before,after):
 
     # 작은 사각형과 그 모서리 찾기
     croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(BeforePerspective)
-    Show([croppedBeforeCorner, edges], ['croppedBeforeCorner', ' edges'])
+    Show([croppedBeforeCorner], ['croppedBeforeCorner'])
 
     cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
-    height, width = croppedBefore.shape[:2]
+    height, width = BeforePerspective.shape[:2]
     rate = IMAGE_WIDTH / width
-    resizeBefore = cv2.resize(croppedBefore, (int(IMAGE_WIDTH),int(rate * height)))
-    height, width = croppedAfter.shape[:2]
+    resizeBefore = cv2.resize(BeforePerspective, (int(IMAGE_WIDTH),int(rate * height)))
+    height, width = AfterPerspective.shape[:2]
     rate = IMAGE_WIDTH / width
-    resizeAfter = cv2.resize(croppedAfter, (int(IMAGE_WIDTH),int(rate * height)))
+    resizeAfter = cv2.resize(AfterPerspective, (int(IMAGE_WIDTH),int(rate * height)))
     # Resize Image
 
     beforeGray = resizeBefore
