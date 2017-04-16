@@ -1,24 +1,10 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
-import unittest2 as unittest
-from matplotlib import pyplot as plt
 import ColorDetect
 import ShapeDetectAndFindCorner
 import ImageMatrixMove
-
-def Show(image, title = [], key=0):
-    cv2.destroyAllWindows()
-    cnt = len(image)
-    for k in range(cnt):
-        string = ''
-        if len(title) < k + 1:
-            string = 'image' + str(k)
-        else:
-            string = title[k]
-        cv2.imshow(string, image[k])
-    cv2.waitKey(key)
-
+import Utils.CustomOpenCV
 
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
@@ -53,7 +39,7 @@ def GrayImage(before,after):
     # Get small size of block's threshold value
 
     edges = cv2.Canny(blurImage, CANNY_MINIMUM_THRESHOLD, CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
-    cv2.imwrite("cannyEdgeDetectedImage.jpg", edges)
+    #cv2.imwrite("cannyEdgeDetectedImage.jpg", edges)
     # Edge detect from bulr processed image
     (_, contours, h) = cv2.findContours(blurImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     # Get image contour
@@ -122,7 +108,7 @@ def GrayImage(before,after):
     differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
     differenceThresh[differenceThresh > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
 
-    Show([differenceMorph, differenceThresh], ['Morph','Thresh'])
+    Utils.CustomOpenCV.ShowMultipleImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
     #Show([resizeBefore, resizeAfter, differenceMorph], ['before','after','difference'])
 
     for count in contours:
