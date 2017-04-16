@@ -5,21 +5,11 @@ import ColorDetect
 import ShapeDetectAndFindCorner
 import ImageMatrixMove
 import Utils.CustomOpenCV
+import Setting.DefineManager
 
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
     #after : Resources/testcase5/after.JPG
-
-    MORPHOLOGY_MASK_SIZE = 5
-    BLUR_MASK_SIZE = 3
-    EACH_IMAGE_DIFFERENCE_THRESHOLD = 30
-    SET_IMAGE_WHITE_COLOR = 255
-    NEIGHBORHOOD_MASK_SIZE = 7
-    CANNY_MINIMUM_THRESHOLD = 0
-    CANNY_MAXIMUM_THRESHOLD = 255
-    GET_MAXIMUM_AREA_SIZE = 5
-    SQUARE_CORNER_NUM = 4
-    IMAGE_WIDTH = 294.0
 
     lineImage = before
     # Line detect image
@@ -27,24 +17,24 @@ def GrayImage(before,after):
     grayImage = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
     # Change color to gray
 
-    kernel = np.ones((MORPHOLOGY_MASK_SIZE, MORPHOLOGY_MASK_SIZE), np.uint8)
+    kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
     grayImage = cv2.morphologyEx(grayImage, cv2.MORPH_OPEN, kernel)
     # Reduce image noise
 
     #blurImage = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
     # Reduce image noise, 0 : border type (idk)
 
-    blurImage = cv2.adaptiveThreshold(grayImage, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
-                                      cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
+    blurImage = cv2.adaptiveThreshold(grayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                      cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
     # Get small size of block's threshold value
 
-    edges = cv2.Canny(blurImage, CANNY_MINIMUM_THRESHOLD, CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
+    edges = cv2.Canny(blurImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
     #cv2.imwrite("cannyEdgeDetectedImage.jpg", edges)
     # Edge detect from bulr processed image
     (_, contours, h) = cv2.findContours(blurImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     # Get image contour
 
-    foundedMaxAreaSizeContours = sorted(contours, key=cv2.contourArea, reverse=True)[:GET_MAXIMUM_AREA_SIZE]
+    foundedMaxAreaSizeContours = sorted(contours, key=cv2.contourArea, reverse=True)[:Setting.DefineManager.GET_MAXIMUM_AREA_SIZE]
 
     squareContourData = []
 
@@ -52,7 +42,7 @@ def GrayImage(before,after):
         peri = cv2.arcLength(indexOfContour, True)
         approx = cv2.approxPolyDP(indexOfContour, 0.02 * peri, True)
 
-        if len(approx) == SQUARE_CORNER_NUM:
+        if len(approx) == Setting.DefineManager.SQUARE_CORNER_NUM:
             squareContourData = approx
             print "contour data"
             print squareContourData
@@ -73,11 +63,11 @@ def GrayImage(before,after):
     cv2.imwrite('Resources/ThresholdImage.png', blurImage)
 
     height, width = BeforePerspective.shape[:2]
-    rate = IMAGE_WIDTH / width
-    resizeBefore = cv2.resize(BeforePerspective, (int(IMAGE_WIDTH),int(rate * height)))
+    rate = Setting.DefineManager.IMAGE_WIDTH / width
+    resizeBefore = cv2.resize(BeforePerspective, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
     height, width = AfterPerspective.shape[:2]
-    rate = IMAGE_WIDTH / width
-    resizeAfter = cv2.resize(AfterPerspective, (int(IMAGE_WIDTH),int(rate * height)))
+    rate = Setting.DefineManager.IMAGE_WIDTH / width
+    resizeAfter = cv2.resize(AfterPerspective, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
     # Resize Image
 
     beforeGray = resizeBefore
@@ -86,13 +76,13 @@ def GrayImage(before,after):
     afterGray = cv2.cvtColor(resizeAfter, cv2.COLOR_BGR2GRAY)
     # Change color to gray
 
-    kernel = np.ones((MORPHOLOGY_MASK_SIZE + 1, MORPHOLOGY_MASK_SIZE + 1), np.uint8)
+    kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
     beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
     afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
     # Reduce image noise
 
     differenceMorph = cv2.absdiff(beforeGray, afterGray)
-    differenceMorph[differenceMorph > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
+    differenceMorph[differenceMorph > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Morphology Image
 
     '''
@@ -101,12 +91,12 @@ def GrayImage(before,after):
     afterGray = cv2.GaussianBlur(afterGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
     ret, afterGray = cv2.threshold(afterGray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     '''
-    beforeThresh= cv2.adaptiveThreshold(beforeGray, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
-                                     cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
-    afterThresh= cv2.adaptiveThreshold(afterGray, SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
-                                     cv2.THRESH_BINARY, NEIGHBORHOOD_MASK_SIZE, 10)
+    beforeThresh= cv2.adaptiveThreshold(beforeGray, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                     cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
+    afterThresh= cv2.adaptiveThreshold(afterGray, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                     cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
     differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
-    differenceThresh[differenceThresh > EACH_IMAGE_DIFFERENCE_THRESHOLD] = SET_IMAGE_WHITE_COLOR
+    differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
 
     Utils.CustomOpenCV.ShowMultipleImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
     #Show([resizeBefore, resizeAfter, differenceMorph], ['before','after','difference'])
