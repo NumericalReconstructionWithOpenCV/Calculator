@@ -44,7 +44,7 @@ def GrayImage(before,after):
 
         if len(approx) == Setting.DefineManager.SQUARE_CORNER_NUM:
             squareContourData = approx
-            print "contour data"
+            Utils.LogManager.PrintLog("ObjectDetect", "GrayImage", "print contour data", Setting.DefineManager.LOG_LEVEL_INFO)
             print squareContourData
             break
 
