@@ -101,7 +101,7 @@ def GrayImage(before,after):
     differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
     differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
 
-    Utils.CustomOpenCV.ShowMultipleImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
+    Utils.CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
     #Show([resizeBefore, resizeAfter, differenceMorph], ['before','after','difference'])
 
     for count in contours:
@@ -119,8 +119,6 @@ def GrayImage(before,after):
                 x, y = i.ravel()
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
-    #Show([lineImage])
-    return  resizeBefore, resizeAfter, difference
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")

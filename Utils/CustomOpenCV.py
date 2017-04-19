@@ -1,6 +1,7 @@
 import cv2
 
-def ShowMultipleImagesWithName(image, title = [], key=0):
+#Show Images. If there is no title, Window name is 'image+alpha'
+def ShowImagesWithName(image, title = [], key=0):
     cv2.destroyAllWindows()
     cnt = len(image)
     for k in range(cnt):
