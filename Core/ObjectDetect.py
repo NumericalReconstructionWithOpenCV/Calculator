@@ -119,6 +119,7 @@ def GrayImage(before,after):
                 x, y = i.ravel()
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
+    return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")
