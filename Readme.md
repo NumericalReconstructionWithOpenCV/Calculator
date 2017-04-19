@@ -6,4 +6,4 @@
 ## Pip
 `sudo pip install unittest2`
 
-`sudo pip install opencv-python==3.2.0.6`
+`sudo pip install opencv-python>=3.2.0.6`
