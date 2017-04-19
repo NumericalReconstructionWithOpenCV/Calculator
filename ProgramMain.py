@@ -1,8 +1,10 @@
-import cv2
 import unittest
-import ObjectDetect as objectDetect
-import FindCorner
+
+import cv2
+
 import Setting.DefineManager
+from Core import FindCorner, ObjectDetect
+
 
 class ProjectSettingTest(unittest.TestCase):
 
@@ -13,5 +15,5 @@ testSuite = unittest.TestSuite()
 testSuite.addTest(ProjectSettingTest('TestVersionOfOpenCV'))
 unittest.TextTestRunner(verbosity=2).run(testSuite)
 
-objectDetect.DetectObjectFromImage(Setting.DefineManager.OBJECT_DETECT_TESTCASE_PATH)
+ObjectDetect.DetectObjectFromImage(Setting.DefineManager.OBJECT_DETECT_TESTCASE_PATH)
 FindCorner.FindCornerFromImage(Setting.DefineManager.FIND_CORNER_TESTCASE_PATH)

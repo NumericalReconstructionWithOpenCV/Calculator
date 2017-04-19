@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+
 import ColorDetect
-import ShapeDetectAndFindCorner
 import ImageMatrixMove
-import Utils.CustomOpenCV
 import Setting.DefineManager
+import ShapeDetectAndFindCorner
+import Utils.CustomOpenCV
+import Utils.LogManager
+
 
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
