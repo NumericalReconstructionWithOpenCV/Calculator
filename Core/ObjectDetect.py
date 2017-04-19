@@ -9,6 +9,7 @@ import ShapeDetectAndFindCorner
 import Utils.CustomOpenCV
 import Utils.LogManager
 
+import GetContour
 
 def GrayImage(before,after):
     #before :  Resources/testcase5/before.JPG
@@ -101,8 +102,7 @@ def GrayImage(before,after):
     differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
     differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
 
-    Utils.CustomOpenCV.ShowMultipleImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
-    #Show([resizeBefore, resizeAfter, differenceMorph], ['before','after','difference'])
+    #Utils.CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
 
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
@@ -119,8 +119,10 @@ def GrayImage(before,after):
                 x, y = i.ravel()
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
-    #Show([lineImage])
-    return  resizeBefore, resizeAfter, difference
+    contour, contourImage = GetContour.GetContour(differenceMorph)
+    Utils.CustomOpenCV.ShowImagesWithName([differenceMorph,contourImage])
+
+    return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")
