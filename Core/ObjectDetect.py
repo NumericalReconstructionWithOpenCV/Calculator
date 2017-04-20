@@ -49,7 +49,7 @@ def GrayImage(before,after):
         if len(approx) == Setting.DefineManager.SQUARE_CORNER_NUM:
             squareContourData = approx
             Utils.LogManager.PrintLog("ObjectDetect", "GrayImage", "print contour data", Setting.DefineManager.LOG_LEVEL_INFO)
-            print squareContourData
+            #print squareContourData
             break
 
     beforeBack = before[:]
@@ -126,55 +126,52 @@ def GrayImage(before,after):
 
     return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
 
-def DetectObjectFromImage(testcase):
-    beforeImage = cv2.imread(testcase + "before.jpg")
+def DetectObjectFromImage(beforeImage, afterImage):
 
-    afterImage = cv2.imread(testcase + "after.jpg")
-
-    mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
+    # mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
 
     # plt.imshow(afterGrayImage)
 
     GrayImage(beforeImage, afterImage)
 
-    differenceBetweenLoadedImages = cv2.absdiff(beforeImage, afterImage)
-
-    diff = afterImage - beforeImage
-
-    differenceBetweenLoadedImages[differenceBetweenLoadedImages > 40] = 255
-
-    differenceBetweenLoadedImages = cv2.cvtColor(differenceBetweenLoadedImages, cv2.COLOR_BGR2GRAY)
-
-    last_result = differenceBetweenLoadedImages - mask
-
-    cv2.imwrite((testcase + "result_absdiff.jpg"), differenceBetweenLoadedImages)
-
-    cv2.imwrite((testcase + "result_mask.jpg"), mask)
-
-    cv2.imwrite((testcase + "result_diff2.jpg"), last_result)
-
-    blurKernel = cv2.GaussianBlur(differenceBetweenLoadedImages, (3, 3), 0)
-
-    differenceBetweenLoadedImages = cv2.adaptiveThreshold(differenceBetweenLoadedImages, 255,
-                                                          cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
-
-    imageEdgesDetected = cv2.Canny(differenceBetweenLoadedImages, 0, 255)
-
-    _, contours, hierarchy = cv2.findContours(imageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    maxContoursArea = 0
-    calculatedContourArea = 0
-    maxContoursIndex = []
-    for contoursIndex in contours:
-        calculatedContourArea = cv2.contourArea(contoursIndex)
-        if maxContoursArea < calculatedContourArea:
-            maxContoursArea = calculatedContourArea
-            maxContoursIndex = contoursIndex
-
-    cv2.drawContours(beforeImage, contours, 0, 255, 3)
-
-    (positionX, positionY, width, height) = cv2.boundingRect(maxContoursIndex)
-
-    cv2.rectangle(beforeImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
-
+    # differenceBetweenLoadedImages = cv2.absdiff(beforeImage, afterImage)
+    #
+    # diff = afterImage - beforeImage
+    #
+    # differenceBetweenLoadedImages[differenceBetweenLoadedImages > 40] = 255
+    #
+    # differenceBetweenLoadedImages = cv2.cvtColor(differenceBetweenLoadedImages, cv2.COLOR_BGR2GRAY)
+    #
+    # last_result = differenceBetweenLoadedImages - mask
+    #
+    # cv2.imwrite((testcase + "result_absdiff.jpg"), differenceBetweenLoadedImages)
+    #
+    # cv2.imwrite((testcase + "result_mask.jpg"), mask)
+    #
+    # cv2.imwrite((testcase + "result_diff2.jpg"), last_result)
+    #
+    # blurKernel = cv2.GaussianBlur(differenceBetweenLoadedImages, (3, 3), 0)
+    #
+    # differenceBetweenLoadedImages = cv2.adaptiveThreshold(differenceBetweenLoadedImages, 255,
+    #                                                       cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 10)
+    #
+    # imageEdgesDetected = cv2.Canny(differenceBetweenLoadedImages, 0, 255)
+    #
+    # _, contours, hierarchy = cv2.findContours(imageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #
+    # maxContoursArea = 0
+    # calculatedContourArea = 0
+    # maxContoursIndex = []
+    # for contoursIndex in contours:
+    #     calculatedContourArea = cv2.contourArea(contoursIndex)
+    #     if maxContoursArea < calculatedContourArea:
+    #         maxContoursArea = calculatedContourArea
+    #         maxContoursIndex = contoursIndex
+    #
+    # cv2.drawContours(beforeImage, contours, 0, 255, 3)
+    #
+    # (positionX, positionY, width, height) = cv2.boundingRect(maxContoursIndex)
+    #
+    # cv2.rectangle(beforeImage, (positionX, positionY), (positionX + width, positionY + height), 255, 2)
+    #
     # cv2.imwrite("Resources/testcase2/result.jpg", beforeGrayImage)
