@@ -74,15 +74,9 @@ def GrayImage(before,after):
     resizeAfter = cv2.resize(AfterPerspective, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
     # Resize Image
 
-    beforeGray = resizeBefore
-    afterGray = resizeAfter
-    beforeGray = cv2.cvtColor(resizeBefore, cv2.COLOR_BGR2GRAY)
-    afterGray = cv2.cvtColor(resizeAfter, cv2.COLOR_BGR2GRAY)
-    # Change color to gray
-
-    beforeblur = cv2.GaussianBlur(beforeGray, (Setting.DefineManager.BLUR_MASK_SIZE, Setting.DefineManager.BLUR_MASK_SIZE), 0)
-    afterblur = cv2.GaussianBlur(afterGray, (Setting.DefineManager.BLUR_MASK_SIZE, Setting.DefineManager.BLUR_MASK_SIZE), 0)
-    # Blur Image
+    beforeGray = cv2.cvtColor(resizeBefore,cv2.COLOR_BGR2GRAY)
+    afterGray = cv2.cvtColor(resizeAfter,cv2.COLOR_BGR2GRAY)
+    # Change Color to gray
 
     kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
     beforeMorph = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
@@ -103,9 +97,6 @@ def GrayImage(before,after):
     differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Threshold Image
 
-    Utils.CustomOpenCV.ShowImagesWithName([beforeThresh,afterThresh],['before','after'])
-    Utils.CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
-
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
         if len(approx) == 5 :
@@ -121,10 +112,14 @@ def GrayImage(before,after):
                 x, y = i.ravel()
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
-    contour, contourImage = GetContour.GetContour(differenceMorph)
-    #Utils.CustomOpenCV.ShowImagesWithName([differenceMorph,contourImage])
+    ObjectImage = GetContour.GetObjectImage(resizeBefore, resizeAfter)
 
-    return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
+    contour, contourImage = GetContour.GetContour(ObjectImage, resizeAfter)
+    Utils.CustomOpenCV.ShowImagesWithName([contourImage])
+
+    cv2.imwrite(Setting.DefineManager.OBJECT_DETECT_TESTCASE_PATH + 'ContourImage.png', contourImage)
+
+    return  contour
 
 def DetectObjectFromImage(testcase):
     beforeImage = cv2.imread(testcase + "before.jpg")
