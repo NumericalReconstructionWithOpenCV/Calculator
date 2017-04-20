@@ -61,14 +61,5 @@ def ImageMatrixMove(arg_image1, squareData):
     M = cv2.getPerspectiveTransform(rect, dst)
     warped = cv2.warpPerspective(arg_image1, M, (maxWidth, maxHeight))
 
-    '''
-    cv2.imshow("Original", arg_image1)
-    cv2.imshow("Result Of ImageMatrixMove", warped)
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-    '''
-
     # return the warped image
     return warped
