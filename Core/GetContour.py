@@ -8,7 +8,7 @@ def GetContour(Image):
     ImageEdgesDetected = cv2.Canny(Image, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD)
     _, contours, hierarchy = cv2.findContours(ImageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
-    ccv.ShowImagesWithName([ImageEdgesDetected])
+    #ccv.ShowImagesWithName([ImageEdgesDetected])
     maxContoursArea = 0
     calculatedContourArea = 0
     maxContoursIndex = []

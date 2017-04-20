@@ -80,29 +80,31 @@ def GrayImage(before,after):
     afterGray = cv2.cvtColor(resizeAfter, cv2.COLOR_BGR2GRAY)
     # Change color to gray
 
+    beforeblur = cv2.GaussianBlur(beforeGray, (Setting.DefineManager.BLUR_MASK_SIZE, Setting.DefineManager.BLUR_MASK_SIZE), 0)
+    afterblur = cv2.GaussianBlur(afterGray, (Setting.DefineManager.BLUR_MASK_SIZE, Setting.DefineManager.BLUR_MASK_SIZE), 0)
+    # Blur Image
+
     kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
-    beforeGray = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
-    afterGray = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
+    beforeMorph = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
+    afterMorph = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
     # Reduce image noise
 
-    differenceMorph = cv2.absdiff(beforeGray, afterGray)
+    differenceMorph = cv2.absdiff(beforeMorph, afterMorph)
     differenceMorph[differenceMorph > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Morphology Image
 
-    '''
-    beforeGray = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
-    ret, beforeGray = cv2.threshold(beforeGray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    afterGray = cv2.GaussianBlur(afterGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
-    ret, afterGray = cv2.threshold(afterGray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    '''
-    beforeThresh= cv2.adaptiveThreshold(beforeGray, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+    beforeThresh = cv2.adaptiveThreshold(beforeMorph, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                      cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
-    afterThresh= cv2.adaptiveThreshold(afterGray, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+    afterThresh = cv2.adaptiveThreshold(afterMorph, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                      cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
+    # Adaptive Threshold Image
+
     differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
     differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
+    # Detect each image difference from Threshold Image
 
-    #Utils.CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
+    Utils.CustomOpenCV.ShowImagesWithName([beforeThresh,afterThresh],['before','after'])
+    Utils.CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
 
     for count in contours:
         approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
@@ -120,7 +122,7 @@ def GrayImage(before,after):
                 cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
     contour, contourImage = GetContour.GetContour(differenceMorph)
-    Utils.CustomOpenCV.ShowImagesWithName([differenceMorph,contourImage])
+    #Utils.CustomOpenCV.ShowImagesWithName([differenceMorph,contourImage])
 
     return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
 
