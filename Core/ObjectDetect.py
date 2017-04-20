@@ -2,7 +2,6 @@
 import cv2
 import numpy as np
 
-import ColorDetect
 import ImageMatrixMove
 import Setting.DefineManager
 import ShapeDetectAndFindCorner
@@ -11,10 +10,7 @@ from Setting import DefineManager
 
 import GetContour
 
-def DetectBlackBoardContourFromOriginImage(targetImage):
-
-    targetGrayImage = cv2.cvtColor(targetImage, cv2.COLOR_BGR2GRAY)
-    # Change color to gray
+def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     morpholgyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
     targetMorphologyGrayImage = cv2.morphologyEx(targetGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
@@ -47,9 +43,9 @@ def FindSquareObjectFromContourData(contourDatas):
     return None
 
 
-def DetectObjectFromImage(beforeImage, afterImage):
+def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayImage):
 
-    squareContourData = DetectBlackBoardContourFromOriginImage(beforeImage)
+    squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
 
     # 굴곡진 큰 사각형 정사각형으로 보정
     perspectiveUpdatedBeforeImage = ImageMatrixMove.ImageMatrixMove(beforeImage, squareContourData)
@@ -58,43 +54,36 @@ def DetectObjectFromImage(beforeImage, afterImage):
     CustomOpenCV.ShowImagesWithName([perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage],
                                     ["perspectiveUpdatedBeforeImage", "perspectiveUpdatedAfterImage"])
 
-
-    # 작은 사각형과 그 모서리 찾기
-    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(perspectiveUpdatedBeforeImage)
-
-    height, width = perspectiveUpdatedBeforeImage.shape[:2]
-    rate = Setting.DefineManager.IMAGE_WIDTH / width
-    resizeBefore = cv2.resize(perspectiveUpdatedBeforeImage, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
-    height, width = perspectiveUpdatedAfterImage.shape[:2]
-    rate = Setting.DefineManager.IMAGE_WIDTH / width
-    resizeAfter = cv2.resize(perspectiveUpdatedAfterImage, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
-    # Resize Image
-
-    beforeGray = cv2.cvtColor(resizeBefore, cv2.COLOR_BGR2GRAY)
-    afterGray = cv2.cvtColor(resizeAfter, cv2.COLOR_BGR2GRAY)
+    perspectiveUpdatedBeforeGrayImage = cv2.cvtColor(perspectiveUpdatedBeforeImage, cv2.COLOR_BGR2GRAY)
+    perspectiveUpdatedAfterGrayImage = cv2.cvtColor(perspectiveUpdatedAfterImage, cv2.COLOR_BGR2GRAY)
     # Change color to gray
 
-    kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
-    beforeMorph = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
-    afterMorph = cv2.morphologyEx(afterGray, cv2.MORPH_OPEN, kernel)
+    morphologyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
+    perspectiveUpdatedBeforeMorphologyGrayImage = cv2.morphologyEx(perspectiveUpdatedBeforeGrayImage, cv2.MORPH_OPEN, morphologyKernel)
+    perspectiveUpdatedAfterMorphologyGrayImage = cv2.morphologyEx(perspectiveUpdatedAfterGrayImage, cv2.MORPH_OPEN, morphologyKernel)
     # Reduce image noise
 
-    differenceMorph = cv2.absdiff(beforeMorph, afterMorph)
-    differenceMorph[differenceMorph > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
-    # Detect each image difference from Morphology Image
-
-    beforeThresh = cv2.adaptiveThreshold(beforeMorph, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+    beforeThresholdedBlackBoardImage = cv2.adaptiveThreshold(perspectiveUpdatedBeforeMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                      cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
-    afterThresh = cv2.adaptiveThreshold(afterMorph, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+    afterThresholdedBlackBoardImage = cv2.adaptiveThreshold(perspectiveUpdatedAfterMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                      cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
     # Adaptive Threshold Image
+    CustomOpenCV.ShowImagesWithName([beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage], ['beforeThresholdedBlackBoardImage', 'afterThresholdedBlackBoardImage'])
 
-    differenceThresh = cv2.absdiff(beforeThresh, afterThresh)
-    differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
+    differenceBasedOnThreshImage = cv2.absdiff(beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage)
+    differenceBasedOnThreshImage[differenceBasedOnThreshImage > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Threshold Image
 
-    CustomOpenCV.ShowImagesWithName([beforeThresh,afterThresh],['before','after'])
-    CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
+    CustomOpenCV.ShowImagesWithName([differenceBasedOnThreshImage], ["differenceBasedOnThreshImage"])
+
+    return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage]
+
+def FindSmallBoxesFromBlackBoardImage(perspectiveUpdatedBeforeImage):
+    # 작은 사각형과 그 모서리 찾기
+    smallRectangleFoundedImage = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(perspectiveUpdatedBeforeImage)
+    return smallRectangleFoundedImage
+
+    # CustomOpenCV.ShowImagesWithName([differenceBetweenEachImages, differenceThresh], ['Morph','Thresh'])
 
     # for count in contours:
     #     approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
@@ -114,7 +103,7 @@ def DetectObjectFromImage(beforeImage, afterImage):
     # contour, contourImage = GetContour.GetContour(differenceMorph)
     #Utils.CustomOpenCV.ShowImagesWithName([differenceMorph,contourImage])
 
-    return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
+    # return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
 
 
     # mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
