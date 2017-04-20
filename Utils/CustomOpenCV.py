@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 #Show Images. If there is no title, Window name is 'image+alpha'
 def ShowImagesWithName(image, title = [], key=0):
@@ -12,3 +13,11 @@ def ShowImagesWithName(image, title = [], key=0):
             string = title[k]
         cv2.imshow(string, image[k])
     cv2.waitKey(key)
+
+# Resize Image as width
+def ResizeImageAsWidth(image, resizeWidth):
+    resizeImage = np.copy(image)
+    height, width = image.shape[:2]
+    rate = resizeWidth / width
+    resizeImage = cv2.resize(resizeImage, (int(resizeWidth),int(rate * height)))
+    return resizeImage

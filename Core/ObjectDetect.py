@@ -51,6 +51,9 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     perspectiveUpdatedBeforeImage = ImageMatrixMove.ImageMatrixMove(beforeImage, squareContourData)
     perspectiveUpdatedAfterImage = ImageMatrixMove.ImageMatrixMove(afterImage, squareContourData)
 
+    perspectiveUpdatedBeforeImage = CustomOpenCV.ResizeImageAsWidth(perspectiveUpdatedBeforeImage, DefineManager.IMAGE_WIDTH)
+    perspectiveUpdatedAfterImage = CustomOpenCV.ResizeImageAsWidth(perspectiveUpdatedAfterImage, DefineManager.IMAGE_WIDTH)
+    # Resize image as shape [ rateHeight, DefineManager.IMAGE_WIDTH ]
 
     CustomOpenCV.ShowImagesWithName([perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage],
                                     ["perspectiveUpdatedBeforeImage", "perspectiveUpdatedAfterImage"])
