@@ -6,83 +6,73 @@ import ColorDetect
 import ImageMatrixMove
 import Setting.DefineManager
 import ShapeDetectAndFindCorner
-import Utils.CustomOpenCV
-import Utils.LogManager
+from Utils import LogManager, CustomOpenCV
+from Setting import DefineManager
 
 import GetContour
 
-def GrayImage(before,after):
-    #before :  Resources/testcase5/before.JPG
-    #after : Resources/testcase5/after.JPG
+def DetectBlackBoardContourFromOriginImage(targetImage):
 
-    lineImage = before
-    # Line detect image
-
-    grayImage = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
+    targetGrayImage = cv2.cvtColor(targetImage, cv2.COLOR_BGR2GRAY)
     # Change color to gray
 
-    kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
-    grayImage = cv2.morphologyEx(grayImage, cv2.MORPH_OPEN, kernel)
+    morpholgyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
+    targetMorphologyGrayImage = cv2.morphologyEx(targetGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
     # Reduce image noise
 
-    #blurImage = cv2.GaussianBlur(beforeGray, (BLUR_MASK_SIZE, BLUR_MASK_SIZE), 0)
-    # Reduce image noise, 0 : border type (idk)
-
-    blurImage = cv2.adaptiveThreshold(grayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
+    targetMorphologyGrayImage = cv2.adaptiveThreshold(targetMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                       cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
     # Get small size of block's threshold value
 
-    edges = cv2.Canny(blurImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
-    #cv2.imwrite("cannyEdgeDetectedImage.jpg", edges)
+    targetEdgeMorphologyGrayImage = cv2.Canny(targetMorphologyGrayImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
+
     # Edge detect from bulr processed image
-    (_, contours, h) = cv2.findContours(blurImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    (_, beforeEdgeGrayImageContour, h) = cv2.findContours(targetEdgeMorphologyGrayImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     # Get image contour
 
-    foundedMaxAreaSizeContours = sorted(contours, key=cv2.contourArea, reverse=True)[:Setting.DefineManager.GET_MAXIMUM_AREA_SIZE]
+    foundedMaxAreaSizeContours = sorted(beforeEdgeGrayImageContour, key=cv2.contourArea, reverse=True)[:Setting.DefineManager.GET_MAXIMUM_AREA_SIZE]
 
-    squareContourData = []
+    return FindSquareObjectFromContourData(foundedMaxAreaSizeContours)
 
-    for indexOfContour in foundedMaxAreaSizeContours:
+def FindSquareObjectFromContourData(contourDatas):
+    for indexOfContour in contourDatas:
         peri = cv2.arcLength(indexOfContour, True)
         approx = cv2.approxPolyDP(indexOfContour, 0.02 * peri, True)
 
         if len(approx) == Setting.DefineManager.SQUARE_CORNER_NUM:
             squareContourData = approx
-            Utils.LogManager.PrintLog("ObjectDetect", "GrayImage", "print contour data", Setting.DefineManager.LOG_LEVEL_INFO)
-            #print squareContourData
-            break
+            LogManager.PrintLog("ObjectDetect", "FindSquareObjectFromContourData", "Square Contour Data Founded", DefineManager.LOG_LEVEL_INFO)
+            return squareContourData
+    LogManager.PrintLog("ObjectDetect", "FindSquareObjectFromContourData", "Square Contour Data Not Founded", DefineManager.LOG_LEVEL_WARN)
+    return None
 
-    beforeBack = before[:]
+
+def DetectObjectFromImage(beforeImage, afterImage):
+
+    squareContourData = DetectBlackBoardContourFromOriginImage(beforeImage)
 
     # 굴곡진 큰 사각형 정사각형으로 보정
-    BeforePerspective = ImageMatrixMove.ImageMatrixMove(before, squareContourData)
-    AfterPerspective = ImageMatrixMove.ImageMatrixMove(after, squareContourData)
-    #Show([BeforePerspective, AfterPerspective], ['BeforePerspective', 'AfterPerspective'])
+    perspectiveUpdatedBeforeImage = ImageMatrixMove.ImageMatrixMove(beforeImage, squareContourData)
+    perspectiveUpdatedAfterImage = ImageMatrixMove.ImageMatrixMove(afterImage, squareContourData)
+
+    CustomOpenCV.ShowImagesWithName([perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage],
+                                    ["perspectiveUpdatedBeforeImage", "perspectiveUpdatedAfterImage"])
+
 
     # 작은 사각형과 그 모서리 찾기
-    croppedBeforeCorner = np.copy(BeforePerspective)
-    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(croppedBeforeCorner)
-    #Show([croppedBeforeCorner, BeforePerspective], ['croppedBeforeCorner', 'BeforePerspective'])
+    croppedBeforeCorner = ShapeDetectAndFindCorner.ShapeDetectAndFindCorner(perspectiveUpdatedBeforeImage)
 
-    cv2.imwrite('Resources/ThresholdImage.png', blurImage)
-
-    height, width = BeforePerspective.shape[:2]
+    height, width = perspectiveUpdatedBeforeImage.shape[:2]
     rate = Setting.DefineManager.IMAGE_WIDTH / width
-    resizeBefore = cv2.resize(BeforePerspective, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
-    height, width = AfterPerspective.shape[:2]
+    resizeBefore = cv2.resize(perspectiveUpdatedBeforeImage, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
+    height, width = perspectiveUpdatedAfterImage.shape[:2]
     rate = Setting.DefineManager.IMAGE_WIDTH / width
-    resizeAfter = cv2.resize(AfterPerspective, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
+    resizeAfter = cv2.resize(perspectiveUpdatedAfterImage, (int(Setting.DefineManager.IMAGE_WIDTH),int(rate * height)))
     # Resize Image
 
-    beforeGray = resizeBefore
-    afterGray = resizeAfter
     beforeGray = cv2.cvtColor(resizeBefore, cv2.COLOR_BGR2GRAY)
     afterGray = cv2.cvtColor(resizeAfter, cv2.COLOR_BGR2GRAY)
     # Change color to gray
-
-    beforeblur = cv2.GaussianBlur(beforeGray, (Setting.DefineManager.BLUR_MASK_SIZE, Setting.DefineManager.BLUR_MASK_SIZE), 0)
-    afterblur = cv2.GaussianBlur(afterGray, (Setting.DefineManager.BLUR_MASK_SIZE, Setting.DefineManager.BLUR_MASK_SIZE), 0)
-    # Blur Image
 
     kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
     beforeMorph = cv2.morphologyEx(beforeGray, cv2.MORPH_OPEN, kernel)
@@ -103,36 +93,33 @@ def GrayImage(before,after):
     differenceThresh[differenceThresh > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Threshold Image
 
-    Utils.CustomOpenCV.ShowImagesWithName([beforeThresh,afterThresh],['before','after'])
-    Utils.CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
+    CustomOpenCV.ShowImagesWithName([beforeThresh,afterThresh],['before','after'])
+    CustomOpenCV.ShowImagesWithName([differenceMorph, differenceThresh], ['Morph','Thresh'])
 
-    for count in contours:
-        approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
-        if len(approx) == 5 :
-            # find pentagon
-            cv2.drawContours(lineImage, [count], 0, (255, 0, 0), -1)
-        elif len(approx) == 3 :
-            # find triangle
-            cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
-        elif len(approx) == 4 :
-            # find square
-            cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
-            for i in approx:
-                x, y = i.ravel()
-                cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
+    # for count in contours:
+    #     approx = cv2.approxPolyDP(count, 0.1 * cv2.arcLength(count, True), True)
+    #     if len(approx) == 5 :
+    #         find pentagon
+            # cv2.drawContours(lineImage, [count], 0, (255, 0, 0), -1)
+        # elif len(approx) == 3 :
+        #     find triangle
+            # cv2.drawContours(lineImage, [count], 0, (0, 255, 0), -1)
+        # elif len(approx) == 4 :
+        #     find square
+            # cv2.drawContours(lineImage, [count], 0, (0, 0, 255), -1)  # square
+            # for i in approx:
+            #     x, y = i.ravel()
+            #     cv2.circle(lineImage, (x, y), 1, (0, 255, 0), -1)
 
-    contour, contourImage = GetContour.GetContour(differenceMorph)
+    # contour, contourImage = GetContour.GetContour(differenceMorph)
     #Utils.CustomOpenCV.ShowImagesWithName([differenceMorph,contourImage])
 
     return  resizeBefore, resizeAfter, differenceMorph, differenceThresh
 
-def DetectObjectFromImage(beforeImage, afterImage):
 
     # mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
 
     # plt.imshow(afterGrayImage)
-
-    GrayImage(beforeImage, afterImage)
 
     # differenceBetweenLoadedImages = cv2.absdiff(beforeImage, afterImage)
     #
