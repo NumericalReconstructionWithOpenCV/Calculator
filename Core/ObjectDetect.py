@@ -51,12 +51,12 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     perspectiveUpdatedBeforeImage = ImageMatrixMove.ImageMatrixMove(beforeImage, squareContourData)
     perspectiveUpdatedAfterImage = ImageMatrixMove.ImageMatrixMove(afterImage, squareContourData)
 
+
     CustomOpenCV.ShowImagesWithName([perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage],
                                     ["perspectiveUpdatedBeforeImage", "perspectiveUpdatedAfterImage"])
 
     perspectiveUpdatedBeforeGrayImage = cv2.cvtColor(perspectiveUpdatedBeforeImage, cv2.COLOR_BGR2GRAY)
     perspectiveUpdatedAfterGrayImage = cv2.cvtColor(perspectiveUpdatedAfterImage, cv2.COLOR_BGR2GRAY)
-    # Change color to gray
 
     morphologyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 1), np.uint8)
     perspectiveUpdatedBeforeMorphologyGrayImage = cv2.morphologyEx(perspectiveUpdatedBeforeGrayImage, cv2.MORPH_OPEN, morphologyKernel)
@@ -74,7 +74,23 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     differenceBasedOnThreshImage[differenceBasedOnThreshImage > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Threshold Image
 
+
     CustomOpenCV.ShowImagesWithName([differenceBasedOnThreshImage], ["differenceBasedOnThreshImage"])
+    ObjectImage = GetContour.GetObjectImage(resizeBefore, resizeAfter)
+
+    contour, contourImage = GetContour.GetContour(ObjectImage, resizeAfter)
+    Utils.CustomOpenCV.ShowImagesWithName([contourImage])
+
+    cv2.imwrite(Setting.DefineManager.OBJECT_DETECT_TESTCASE_PATH + 'ContourImage.png', contourImage)
+
+    return  contour
+
+def DetectObjectFromImage(testcase):
+    beforeImage = cv2.imread(testcase + "before.jpg")
+
+    afterImage = cv2.imread(testcase + "after.jpg")
+
+    mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage]
 
