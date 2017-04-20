@@ -76,23 +76,12 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
 
 
     CustomOpenCV.ShowImagesWithName([differenceBasedOnThreshImage], ["differenceBasedOnThreshImage"])
-    ObjectImage = GetContour.GetObjectImage(resizeBefore, resizeAfter)
+    objectFoundedImage = GetContour.GetObjectImage(perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage)
 
-    contour, contourImage = GetContour.GetContour(ObjectImage, resizeAfter)
-    Utils.CustomOpenCV.ShowImagesWithName([contourImage])
+    humanDetectedContour, contourLineDrawImage = GetContour.GetContour(objectFoundedImage, perspectiveUpdatedAfterImage)
+    CustomOpenCV.ShowImagesWithName([contourLineDrawImage])
 
-    cv2.imwrite(Setting.DefineManager.OBJECT_DETECT_TESTCASE_PATH + 'ContourImage.png', contourImage)
-
-    return  contour
-
-def DetectObjectFromImage(testcase):
-    beforeImage = cv2.imread(testcase + "before.jpg")
-
-    afterImage = cv2.imread(testcase + "after.jpg")
-
-    mask = ColorDetect.ColorDetectFromImage(testcase + "before.jpg")
-
-    return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage]
+    return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
 
 def FindSmallBoxesFromBlackBoardImage(perspectiveUpdatedBeforeImage):
     # 작은 사각형과 그 모서리 찾기
