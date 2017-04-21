@@ -4,9 +4,11 @@ import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
 def GetContour(Image, drawImage = None):
-    contourImage = np.ndarray(Image.shape)
-    if drawImage != None:
+    contourImage = np.ndarray
+    if drawImage is not None:
         contourImage=np.copy(drawImage)
+    else:
+        contourImage = np.ndarray(Image.shape)
     ImageEdgesDetected = cv2.Canny(Image, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD)
     _, contours, hierarchy = cv2.findContours(ImageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
@@ -80,6 +82,8 @@ def GetObjectImage(beforeImage, afterImage):
     afterHSV = HSVChannelsChange(afterHSV,V)
     afterHSV = cv2.cvtColor(afterHSV, cv2.COLOR_HSV2BGR)
     afterHSVGray = cv2.cvtColor(afterHSV, cv2.COLOR_BGR2GRAY)
+
+    ccv.ShowImagesWithName([after,afterHSV])
 
     kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 2, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 2), np.uint8)
     beforeHSVMorph = cv2.morphologyEx(beforeHSVGray, cv2.MORPH_OPEN, kernel)
