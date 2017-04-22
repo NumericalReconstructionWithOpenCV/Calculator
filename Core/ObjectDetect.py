@@ -22,6 +22,8 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     targetEdgeMorphologyGrayImage = cv2.Canny(targetMorphologyGrayImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
 
+    CustomOpenCV.ShowImagesWithName([targetEdgeMorphologyGrayImage], ["targetEdgeMorphologyGrayImage"])
+
     # Edge detect from bulr processed image
     (_, beforeEdgeGrayImageContour, h) = cv2.findContours(targetEdgeMorphologyGrayImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     # Get image contour

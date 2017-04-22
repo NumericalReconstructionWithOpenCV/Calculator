@@ -124,6 +124,6 @@ def GetObjectImage(beforeImage, afterImage):
 
     finalDifference = cv2.absdiff(differenceMorph, afterDifference)
 
-    ccv.ShowImagesWithName([differenceMorph, afterDifference, finalDifference],['Morph','After', 'Difference'])
+    ccv.ShowImagesWithName([differenceMorph, afterDifference, finalDifference], ['Morph','After', 'Difference'])
 
     return afterDifference
