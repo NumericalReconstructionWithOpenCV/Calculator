@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 import Utils.CustomOpenCV as ccv
@@ -43,8 +44,20 @@ def LengthBetweenTwoDots(point1, point2):
     sumXY = np.sum(absPoint)
     return np.sqrt(sumXY)
 
+# GetMeanRateImage(researchImage)
+# 흑백이미지를 입력값으로 받는다
+# researchImage를 히스토그램 평활화를 통하여 histImage를 얻는다
+# researchImage를 GaussianBlur함수를 통하여 blurImage를 얻는다
+# researchImage를 np.uint8형에서 float형으로 변환한 rateImage를 얻는다
+# rateImage를 통하여 이미지 화소의 mean(평균값)을 구한다
+# rateImage와 mean을 통하여 deviation(편차)를 구한다
+# Setting.DefineManager.BASE_DEVIATION과 deviation의비율을 구한다
+# 비율을 통하여 새로 구한 rateMean(비율을 통한 평균값)을 구한다
+# histImage와 blurImage를 혼합하며 평균차를 더한 rateImage를 구한다.
+# cv2.addWeighted(image1, alpha,image2, beta, gamma) = image1 * alpha + image2 * beta + gamma
 def GetMeanRateImage(researchImage):
     histImage = cv2.equalizeHist(researchImage)
+    blurImage = cv2.GaussianBlur(researchImage,(0,0), Setting.DefineManager.SIGMA)
     rateImage = histImage.astype(float)
     argument = rateImage.shape[0] * rateImage.shape[1]
     mean =  np.sum(rateImage) / argument
@@ -55,10 +68,18 @@ def GetMeanRateImage(researchImage):
     deviationRate = Setting.DefineManager.BASE_DEVIATION / deviation
     rateMean = mean * deviationRate
     print 'mean : ' + str(mean) + ', dispersion : ' + str(deviation)
-    blurImage = cv2.GaussianBlur(researchImage,(0,0), Setting.DefineManager.SIGMA)
     rateImage = cv2.addWeighted(histImage, 0.9, blurImage, 0.1, Setting.DefineManager.BASE_MEAN - rateMean)
     return rateImage
 
+# SquareDetectAndReturnRateAsSquare(image)
+# 흑백이미지를 입력값으로 받는다
+# adaptiveThreshold, Canny, findContours함수 통하여 외곽선을 추출한다
+# 찾아진 외곽선 중 사각형으로 추측되는 점들을 rectContour에 담는다
+# rectContour를 contourArea(외곽선 영역 넓이)를 통해 오름차순으로 정렬한다
+# 순차적으로 영역넓이를 비교해 가며 넓이가 유사한 갯수가 가장 많은 부분을 찾는다
+# 높이와 너비가 어느정도 유사한 사각형의 너비를 누적하여 평균값을 낸다
+# 위 두 과정은 판넬의 검정색 사각형의 갯수가 유사 갯수의 최대가 된다고 가정
+# 평균값을 통하여 resizeRate(이미지를 resize할 비율)을 구한다
 def SquareDetectAndReturnRateAsSquare(image):
     binaryImage = cv2.adaptiveThreshold(image, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                       cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE * 7, 10)
@@ -104,16 +125,6 @@ def GetContour(Image, drawImage = None):
     ImageEdgesDetected = cv2.Canny(Image, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD)
     _, contours, hierarchy = cv2.findContours(ImageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-
-    maxContoursArea = 0
-    calculatedContourArea = 0
-    maxContoursIndex = []
-    for contoursIndex in contours:
-        calculatedContourArea = cv2.contourArea(contoursIndex)
-        if maxContoursArea < calculatedContourArea:
-            maxContoursArea = calculatedContourArea
-            maxContoursIndex = contoursIndex
-
     #cv2.drawContours(contourImage, contours, -1, 255, 2)
     return contours, contourImage
 
@@ -127,6 +138,7 @@ def GetSharpImage(image):
     return ImageSharp, ImageSharpGray
 
 #'V'Channel influence 'S'Channel. So, if 'V'Channel is change, 'S'Channel mut be change, too.
+# S = C / V , So, if V -> V' S = S * (V / V')
 def HSVChannelsChange(Image,changeV,HSV=True):
     if HSV is False:
         Image = cv2.cvtColor(Image, cv2.COLOR_BGR2HSV)
@@ -145,27 +157,35 @@ def HSVChannelsChange(Image,changeV,HSV=True):
         changeImage = cv2.cvtColor(Image, cv2.COLOR_HSV2BGR)
     return changeImage
 
+# NONE
 def SimplifyImage(image):
     return image
 
+# FillDifferenceImage(differenceImage)
+# 연산을 통하여 얻어낸 차이점 흑백 이미지를 받는다
+# =====(반복문)=====
+# morpholgyEx의 닫기연산을 통하여 새로운 이미지를 얻는다. 닫기연산 = 팽창연산 후 침식연산
+# GaussianBlur를 통하여 차이점 이미지를 다듬는다
+# threshold를 통하여 흐려진 이미지를 이진화 하여 뚜렷하게 한다
+# 이러한 이미지의 외곽선을 추출하여 외곽선 영역의 갯수를 구한다
+# 영역 갯수가 Setting.DefineManager.END_CONTOUR_COUNT보다 작으면 반복문을 종료한다
+# =====(반복문)=====
+# finalDifference는 처음 받은 differenceImage와 수정한 이미지인 afterDifference의 개선(쇠퇴)부분을 보여준다
 def FillDifferenceImage(differenceImage):
     afterDifference = np.copy(differenceImage)
     beforeDifference = np.ndarray(afterDifference.shape)
-    count = 10
-    sameCount = 0
-    beforeCount = 0
+    alpha = 10
     while True:
-        kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + count,Setting.DefineManager.MORPHOLOGY_MASK_SIZE + count), np.uint8)
+        kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + alpha,Setting.DefineManager.MORPHOLOGY_MASK_SIZE + alpha), np.uint8)
         beforeDifference = np.copy(afterDifference)
         afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
         afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.WIDTH_MASK_SIZE
                                                              , Setting.DefineManager.HEIGHT_MASK_SIZE), 0)
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        nowCount = len(GetContour(afterDifference)[0])
-        if nowCount < Setting.DefineManager.END_CONTOUR_COUNT:
+        contourLength = len(GetContour(afterDifference)[0])
+        if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
-        beforeCount = nowCount
 
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
 
