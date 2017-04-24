@@ -3,12 +3,39 @@ import numpy as np
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
+def AngleAsDealWithPointFromContours(contours, drawImage,):
+    pointAngle = []
+    for contourIndex in contours:
+        length = len(contourIndex)
+        strideKey = max(length / Setting.DefineManager.RESEARCH_ANGLE_COUNT,Setting.DefineManager.MINIMUM_STRIDE_KEY)
+        beforeAngle = 0.0
+        for index in range(int(length/strideKey) + 1):
+            pointA = contourIndex[((index-1) * strideKey)%length].ravel()
+            pointB = contourIndex[((index) * strideKey)%length].ravel()
+            pointC = contourIndex[((index+1) * strideKey)%length].ravel()
+            x, y = pointA.ravel()
+            cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_BLUE, -1)
+            nowAngle = AngleBetweenThreePoints(pointA,pointB,pointC)
+            absAngle = abs(beforeAngle - nowAngle)
+            if absAngle > Setting.DefineManager.ANGLE_AS_DEAL_WITH_POINT :
+                pointAngle.insert(len(pointAngle), pointB)
+                angleText = str(int(nowAngle)) + "," + str(int(absAngle))
+                thickness = 0.3
+                cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_RED, -1)
+                cv2.putText(drawImage, angleText,(x,y),0, thickness,Setting.DefineManager.RGB_COLOR_WHITE)
+            beforeAngle = nowAngle
+    ccv.ShowImagesWithName([drawImage],['PointImage'])
+    return pointAngle
+
 #Return angle ABC
 def AngleBetweenThreePoints(pointA, pointB, pointC):
     AB = LengthBetweenTwoDots(pointA, pointB)
     BC = LengthBetweenTwoDots(pointB, pointC)
     dot = float(np.sum((pointA - pointB) * (pointC - pointB)))
-    theta = np.arccos(dot/(AB*BC))
+    cosX = min(max(dot / (AB * BC), -1), 1)
+    # For avoid RuntimeWarning: invalid value encountered in arccos
+    print 'AB : ' + str(AB) + ', BC : ' + str(BC) + ', AB * BC : ' + str(AB*BC) + ', dot : ' + str(dot) + ', cosX : ' + str(cosX)
+    theta = np.arccos(cosX)
     return theta * Setting.DefineManager.RADIAN_TO_DEGREE
 
 def LengthBetweenTwoDots(point1, point2):
@@ -24,10 +51,10 @@ def GetMeanRateImage(researchImage):
     argMean = np.ndarray(rateImage.shape,dtype = float)
     argMean[:] = mean
     calcImage = rateImage - argMean
-    dispersion = np.sqrt(np.sum(calcImage * calcImage) / argument)
-    dispersionRate = Setting.DefineManager.BASE_DISPERSION / dispersion
-    rateMean = mean * dispersionRate
-    print 'mean : ' + str(mean) + ', dispersion : ' + str(dispersion)
+    deviation = np.sqrt(np.sum(calcImage * calcImage) / argument)
+    deviationRate = Setting.DefineManager.BASE_DEVIATION / deviation
+    rateMean = mean * deviationRate
+    print 'mean : ' + str(mean) + ', dispersion : ' + str(deviation)
     blurImage = cv2.GaussianBlur(researchImage,(0,0), Setting.DefineManager.SIGMA)
     rateImage = cv2.addWeighted(histImage, 0.9, blurImage, 0.1, Setting.DefineManager.BASE_MEAN - rateMean)
     return rateImage
@@ -37,14 +64,14 @@ def SquareDetectAndReturnRateAsSquare(image):
                                       cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE * 7, 10)
     edgeImage = cv2.Canny(binaryImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD,
                                               Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize=5)
-    ccv.ShowImagesWithName([edgeImage])
+
     _, foundContours, h = cv2.findContours(edgeImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     rectContour = []
     for contour in foundContours:
         approx = cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
         if len(approx) == 4 and cv2.contourArea(contour) > Setting.DefineManager.MINIMUM_RECT_AREA_SIZE :
             rectContour.insert(len(rectContour) - 1, approx)
-    ccv.ShowImagesWithName([image])
+
     # Find Rect Contour
     rectContour = sorted(rectContour, key=cv2.contourArea)
     rectContour.insert(len(rectContour),rectContour[0])
@@ -77,7 +104,7 @@ def GetContour(Image, drawImage = None):
     ImageEdgesDetected = cv2.Canny(Image, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD)
     _, contours, hierarchy = cv2.findContours(ImageEdgesDetected, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    '''
+
     maxContoursArea = 0
     calculatedContourArea = 0
     maxContoursIndex = []
@@ -86,9 +113,8 @@ def GetContour(Image, drawImage = None):
         if maxContoursArea < calculatedContourArea:
             maxContoursArea = calculatedContourArea
             maxContoursIndex = contoursIndex
-    '''
 
-    cv2.drawContours(contourImage, contours, -1, 255, 2)
+    #cv2.drawContours(contourImage, contours, -1, 255, 2)
     return contours, contourImage
 
 def GetSharpImage(image):
@@ -96,9 +122,8 @@ def GetSharpImage(image):
     if len(Image.shape) <= 2:
         Image = cv2.cvtColor(Image, cv2.COLOR_GRAY2BGR)
     ImageSharp = cv2.GaussianBlur(Image,(0,0), Setting.DefineManager.SIGMA)
-    ImageSharp = cv2.addWeighted(Image, Setting.DefineManager.ALPHA,ImageSharp, Setting.DefineManager.BETA,0)
+    ImageSharp = cv2.addWeighted(Image, Setting.DefineManager.ALPHA,ImageSharp, Setting.DefineManager.BETA, 0)
     ImageSharpGray = cv2.cvtColor(ImageSharp, cv2.COLOR_BGR2GRAY)
-    #Show([ImageSharp, ImageSharpGray],['Sharp','SharpGray'])
     return ImageSharp, ImageSharpGray
 
 #'V'Channel influence 'S'Channel. So, if 'V'Channel is change, 'S'Channel mut be change, too.
@@ -133,27 +158,18 @@ def FillDifferenceImage(differenceImage):
         kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + count,Setting.DefineManager.MORPHOLOGY_MASK_SIZE + count), np.uint8)
         beforeDifference = np.copy(afterDifference)
         afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
-        afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.BLUR_MASK_SIZE * Setting.DefineManager.WIDTH_MULTIPLE
-                                                             ,Setting.DefineManager.BLUR_MASK_SIZE  * Setting.DefineManager.HEIGHT_MULTIPLE), 0)
+        afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.WIDTH_MASK_SIZE
+                                                             , Setting.DefineManager.HEIGHT_MASK_SIZE), 0)
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        diff = -cv2.absdiff(beforeDifference, afterDifference).astype(np.bool)
         nowCount = len(GetContour(afterDifference)[0])
-        if diff.all() or sameCount >= 5:
-            count = count + 2
-            sameCount = 0
-        if beforeCount == nowCount:
-            sameCount = sameCount + 1
-        else:
-            sameCount = 0
-        print nowCount
         if nowCount < Setting.DefineManager.END_CONTOUR_COUNT:
             break
         beforeCount = nowCount
 
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
 
-    ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
+    #ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
     return afterDifference
 
 def GetObjectImage(beforeImage, afterImage):
@@ -178,19 +194,21 @@ def GetObjectImage(beforeImage, afterImage):
     differenceMorph[differenceMorph<Setting.DefineManager.SET_IMAGE_WHITE_COLOR] = Setting.DefineManager.SET_IMAGE_BLACK_COLOR
     absdifferenceMorph = -np.copy(differenceMorph)
 
+    sigmak = 2
+
     V = cv2.split(beforeHSV)[2]
     V = GetSharpImage(V)[1]
+    #V = cv2.GaussianBlur(GetSharpImage(V)[1], (0, 0), sigmak)
     beforeHSV = HSVChannelsChange(beforeHSV,V)
     beforeHSV = cv2.cvtColor(beforeHSV, cv2.COLOR_HSV2BGR)
     beforeHSVGray = cv2.cvtColor(beforeHSV, cv2.COLOR_BGR2GRAY)
 
     V = cv2.split(afterHSV)[2]
     V = GetSharpImage(V)[1]
+    #V = cv2.GaussianBlur(GetSharpImage(V)[1], (0, 0), sigmak)
     afterHSV = HSVChannelsChange(afterHSV,V)
     afterHSV = cv2.cvtColor(afterHSV, cv2.COLOR_HSV2BGR)
     afterHSVGray = cv2.cvtColor(afterHSV, cv2.COLOR_BGR2GRAY)
-
-    ccv.ShowImagesWithName([after,afterHSV])
 
     kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 2, Setting.DefineManager.MORPHOLOGY_MASK_SIZE + 2), np.uint8)
     beforeHSVMorph = cv2.morphologyEx(beforeHSVGray, cv2.MORPH_OPEN, kernel)
