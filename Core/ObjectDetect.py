@@ -12,8 +12,11 @@ import GetContour
 
 def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
+    targetEqualizeGrayImage = GetContour.GetMeanRateImage(targetGrayImage)
+
     morpholgyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
-    targetMorphologyGrayImage = cv2.morphologyEx(targetGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
+    targetMorphologyGrayImage = cv2.morphologyEx(targetEqualizeGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
+    CustomOpenCV.ShowImagesWithName([targetGrayImage,targetEqualizeGrayImage,targetMorphologyGrayImage])
     # Reduce image noise
 
     targetMorphologyGrayImage = cv2.adaptiveThreshold(targetMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
@@ -22,7 +25,7 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     targetEdgeMorphologyGrayImage = cv2.Canny(targetMorphologyGrayImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
 
-    CustomOpenCV.ShowImagesWithName([targetEdgeMorphologyGrayImage], ["targetEdgeMorphologyGrayImage"])
+    CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetEdgeMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
 
     # Edge detect from bulr processed image
     (_, beforeEdgeGrayImageContour, h) = cv2.findContours(targetEdgeMorphologyGrayImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -46,6 +49,12 @@ def FindSquareObjectFromContourData(contourDatas):
 
 
 def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayImage):
+
+    resizeRate = GetContour.SquareDetectAndReturnRateAsSquare(beforeGrayImage)
+    beforeImage = CustomOpenCV.ResizeImageAsRate(beforeImage,resizeRate)
+    beforeGrayImage = CustomOpenCV.ResizeImageAsRate(beforeGrayImage,resizeRate)
+    afterImage = CustomOpenCV.ResizeImageAsRate(afterImage,resizeRate)
+    afterGrayImage = CustomOpenCV.ResizeImageAsRate(afterGrayImage,resizeRate)
 
     squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
 
