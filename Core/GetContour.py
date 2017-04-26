@@ -9,17 +9,18 @@ def AngleAsDealWithPointFromContours(contours, drawImage,):
     for contourIndex in contours:
         length = len(contourIndex)
         strideKey = max(length / Setting.DefineManager.RESEARCH_ANGLE_COUNT,Setting.DefineManager.MINIMUM_STRIDE_KEY)
+        print strideKey
         beforeAngle = 0.0
         for index in range(int(length/strideKey) + 1):
             pointA = contourIndex[((index-1) * strideKey)%length].ravel()
             pointB = contourIndex[((index) * strideKey)%length].ravel()
             pointC = contourIndex[((index+1) * strideKey)%length].ravel()
-            x, y = pointA.ravel()
+            x, y = pointB.ravel()
             cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_BLUE, -1)
             nowAngle = AngleBetweenThreePoints(pointA,pointB,pointC)
             absAngle = abs(beforeAngle - nowAngle)
             if absAngle > Setting.DefineManager.ANGLE_AS_DEAL_WITH_POINT :
-                pointAngle.insert(len(pointAngle), pointB)
+                pointAngle.append(np.asarray([pointB]))
                 angleText = str(int(nowAngle)) + "," + str(int(absAngle))
                 thickness = 0.3
                 cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_RED, -1)
@@ -35,9 +36,10 @@ def AngleBetweenThreePoints(pointA, pointB, pointC):
     dot = float(np.sum((pointA - pointB) * (pointC - pointB)))
     cosX = min(max(dot / (AB * BC), -1), 1)
     # For avoid RuntimeWarning: invalid value encountered in arccos
-    print 'AB : ' + str(AB) + ', BC : ' + str(BC) + ', AB * BC : ' + str(AB*BC) + ', dot : ' + str(dot) + ', cosX : ' + str(cosX)
-    theta = np.arccos(cosX)
-    return theta * Setting.DefineManager.RADIAN_TO_DEGREE
+    theta = np.arccos(cosX) * Setting.DefineManager.RADIAN_TO_DEGREE
+    #print 'AB : ' + str(AB) + ', BC : ' + str(BC) + ', AB * BC : ' + str(AB*BC) + ', dot : ' + str(dot) + ', cosX : ' + str(cosX),
+    #print ', theta : ' + str(theta)
+    return theta
 
 def LengthBetweenTwoDots(point1, point2):
     absPoint = (point1 - point2) ** 2
@@ -67,7 +69,7 @@ def GetMeanRateImage(researchImage):
     deviation = np.sqrt(np.sum(calcImage * calcImage) / argument)
     deviationRate = Setting.DefineManager.BASE_DEVIATION / deviation
     rateMean = mean * deviationRate
-    print 'mean : ' + str(mean) + ', dispersion : ' + str(deviation)
+    print 'mean : ' + str(mean) + ', deviation : ' + str(deviation)
     rateImage = cv2.addWeighted(histImage, 0.9, blurImage, 0.1, Setting.DefineManager.BASE_MEAN - rateMean)
     return rateImage
 
@@ -91,11 +93,11 @@ def SquareDetectAndReturnRateAsSquare(image):
     for contour in foundContours:
         approx = cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
         if len(approx) == 4 and cv2.contourArea(contour) > Setting.DefineManager.MINIMUM_RECT_AREA_SIZE :
-            rectContour.insert(len(rectContour) - 1, approx)
+            rectContour.append(approx)
 
     # Find Rect Contour
     rectContour = sorted(rectContour, key=cv2.contourArea)
-    rectContour.insert(len(rectContour),rectContour[0])
+    rectContour.append(rectContour[0])
     maxcount, areaCount, lenghtSum, lenghtMean, beforeAreaSize = [0, 0 ,0, 0, 0];
     for rect in rectContour:
         nowAreaSize = cv2.contourArea(rect)
