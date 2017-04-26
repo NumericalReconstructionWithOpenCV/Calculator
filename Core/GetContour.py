@@ -4,12 +4,29 @@ import numpy as np
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
-def AngleAsDealWithPointFromContours(contours, drawImage,):
+def FindNavel(contours, drawImage):
+    minX = drawImage.shape[1]
+    maxX = 0
+    maxY = 0
+    minY = drawImage.shape[0]
+    for contourindex in contours:
+        for point in contourindex:
+            x, y = point.ravel()
+            minX = min(minX,x)
+            maxX = max(maxX,x)
+            minY = min(minY,y)
+            maxY = max(maxY,y)
+    x = int((minX + maxX) / 2)
+    #y = int(minY * 0.62 + maxY * 0.38)
+    y = int (173*(minY*0.62 + maxY*0.38)/(maxY-minY))
+    thickness = 0.3
+    cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
+
+def AngleAsDealWithPointFromContours(contours, drawImage):
     pointAngle = []
     for contourIndex in contours:
         length = len(contourIndex)
         strideKey = max(length / Setting.DefineManager.RESEARCH_ANGLE_COUNT,Setting.DefineManager.MINIMUM_STRIDE_KEY)
-        print strideKey
         beforeAngle = 0.0
         for index in range(int(length/strideKey) + 1):
             pointA = contourIndex[((index-1) * strideKey)%length].ravel()

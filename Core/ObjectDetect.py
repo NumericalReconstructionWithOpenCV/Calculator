@@ -94,6 +94,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     objectFoundedImage = GetContour.GetObjectImage(perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage)
 
     humanDetectedContour, contourLineDrawImage = GetContour.GetContour(objectFoundedImage, perspectiveUpdatedAfterImage)
+    GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
