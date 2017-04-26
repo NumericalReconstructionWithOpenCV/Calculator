@@ -17,8 +17,7 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    #y = int(minY * 0.62 + maxY * 0.38)
-    y = int (173*(minY*0.62 + maxY*0.38)/(maxY-minY))
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO))
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
 
@@ -203,12 +202,13 @@ def FillDifferenceImage(differenceImage):
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contourLength = len(GetContour(afterDifference)[0])
+        ccv.ShowImagesWithName([beforeDifference,afterDifference],[],700)
         if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
 
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
 
-    #ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
+    ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
     return afterDifference
 
 def GetObjectImage(beforeImage, afterImage):

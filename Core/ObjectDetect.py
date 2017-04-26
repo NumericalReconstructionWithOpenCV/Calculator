@@ -17,6 +17,8 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     morpholgyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
     targetMorphologyGrayImage = cv2.morphologyEx(targetEqualizeGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
+
+    #CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
     # Reduce image noise
 
     targetMorphologyGrayImage = cv2.adaptiveThreshold(targetMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
@@ -56,7 +58,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     afterImage = CustomOpenCV.ResizeImageAsRate(afterImage,resizeRate)
     afterGrayImage = CustomOpenCV.ResizeImageAsRate(afterGrayImage,resizeRate)
 
-    #squareContourData = DetectBackgroundSquare.DetectBackgroundSquareFromImage(beforeImage) 형광색 인식으로 점 4개 찾는 함수
+    #squareContourData = DetectBackgroundSquare.DetectBackgroundSquareFromImage(beforeImage) #형광색 인식으로 점 4개 찾는 함수
     squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
 
     # 굴곡진 큰 사각형 정사각형으로 보정
