@@ -21,15 +21,13 @@ def DetectBackgroundSquareFromImage(image):
         cY = int(M['m01'] / M['m00'])
         centerPoint.append([cX, cY])
 
-        '''
         cv2.drawContours(imageFromDetectedColor, [count], -1, (255, 0, 0), 2)
         cv2.circle(imageFromDetectedColor, (cX, cY), 7, (0, 255, 0), -1)
         cv2.putText(imageFromDetectedColor, "center", (cX - 20, cY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        '''
 
     ctrNp = np.array(centerPoint).reshape((-1,1,2)).astype(np.int32)
     #cv2.imwrite("../Tests/practice/out1.jpg", imageFromDetectedColor)
-    #cv2.imshow("abcdef", imageFromDetectedColor)
+    cv2.imshow("abcdef", imageFromDetectedColor)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
