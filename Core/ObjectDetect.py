@@ -5,6 +5,7 @@ import numpy as np
 import ImageMatrixMove
 import Setting.DefineManager
 import ShapeDetectAndFindCorner
+import DetectBackgroundSquare
 from Utils import LogManager, CustomOpenCV
 from Setting import DefineManager
 
@@ -16,7 +17,8 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     morpholgyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
     targetMorphologyGrayImage = cv2.morphologyEx(targetEqualizeGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
-    CustomOpenCV.ShowImagesWithName([targetGrayImage,targetEqualizeGrayImage,targetMorphologyGrayImage])
+
+    #CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
     # Reduce image noise
 
     targetMorphologyGrayImage = cv2.adaptiveThreshold(targetMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
@@ -25,7 +27,7 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     targetEdgeMorphologyGrayImage = cv2.Canny(targetMorphologyGrayImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
 
-    CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetEdgeMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
+    #CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetEdgeMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
 
     # Edge detect from bulr processed image
     (_, beforeEdgeGrayImageContour, h) = cv2.findContours(targetEdgeMorphologyGrayImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -56,7 +58,8 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     afterImage = CustomOpenCV.ResizeImageAsRate(afterImage,resizeRate)
     afterGrayImage = CustomOpenCV.ResizeImageAsRate(afterGrayImage,resizeRate)
 
-    squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
+    squareContourData = DetectBackgroundSquare.DetectBackgroundSquareFromImage(beforeImage) #형광색 인식으로 점 4개 찾는 함수
+    #squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
 
     # 굴곡진 큰 사각형 정사각형으로 보정
     perspectiveUpdatedBeforeImage = ImageMatrixMove.ImageMatrixMove(beforeImage, squareContourData)
@@ -66,8 +69,8 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     perspectiveUpdatedAfterImage = CustomOpenCV.ResizeImageAsWidth(perspectiveUpdatedAfterImage, DefineManager.IMAGE_WIDTH)
     # Resize image as shape [ rateHeight, DefineManager.IMAGE_WIDTH ]
 
-    CustomOpenCV.ShowImagesWithName([perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage],
-                                    ["perspectiveUpdatedBeforeImage", "perspectiveUpdatedAfterImage"])
+    #CustomOpenCV.ShowImagesWithName([perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage],
+    #                                ["perspectiveUpdatedBeforeImage", "perspectiveUpdatedAfterImage"])
 
     perspectiveUpdatedBeforeGrayImage = cv2.cvtColor(perspectiveUpdatedBeforeImage, cv2.COLOR_BGR2GRAY)
     perspectiveUpdatedAfterGrayImage = cv2.cvtColor(perspectiveUpdatedAfterImage, cv2.COLOR_BGR2GRAY)
@@ -82,18 +85,19 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     afterThresholdedBlackBoardImage = cv2.adaptiveThreshold(perspectiveUpdatedAfterMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
                                      cv2.THRESH_BINARY, Setting.DefineManager.NEIGHBORHOOD_MASK_SIZE, 10)
     # Adaptive Threshold Image
-    CustomOpenCV.ShowImagesWithName([beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage], ['beforeThresholdedBlackBoardImage', 'afterThresholdedBlackBoardImage'])
+    #CustomOpenCV.ShowImagesWithName([beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage], ['beforeThresholdedBlackBoardImage', 'afterThresholdedBlackBoardImage'])
 
     differenceBasedOnThreshImage = cv2.absdiff(beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage)
     differenceBasedOnThreshImage[differenceBasedOnThreshImage > Setting.DefineManager.EACH_IMAGE_DIFFERENCE_THRESHOLD] = Setting.DefineManager.SET_IMAGE_WHITE_COLOR
     # Detect each image difference from Threshold Image
 
 
-    CustomOpenCV.ShowImagesWithName([differenceBasedOnThreshImage], ["differenceBasedOnThreshImage"])
+    #CustomOpenCV.ShowImagesWithName([differenceBasedOnThreshImage], ["differenceBasedOnThreshImage"])
     objectFoundedImage = GetContour.GetObjectImage(perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage)
 
     humanDetectedContour, contourLineDrawImage = GetContour.GetContour(objectFoundedImage, perspectiveUpdatedAfterImage)
-    CustomOpenCV.ShowImagesWithName([contourLineDrawImage])
+    GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
+    importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
 
