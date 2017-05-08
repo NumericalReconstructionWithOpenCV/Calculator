@@ -107,12 +107,6 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
         drawImage = np.copy(perspectiveUpdatedBeforeImage)
         for point in pointAngle[index]:
             x, y = point.ravel()
-            color = 155 + colorSize * (index + 1)
-            if index % 2 is 0:
-                cv2.circle(drawImage, (x,y), 2, (color,color,0), -1)
-            else:
-                cv2.circle(drawImage, (x,y), 2, (color,0,color), -1)
-        CustomOpenCV.ShowImagesWithName([drawImage, contourLineDrawImage])
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
 
