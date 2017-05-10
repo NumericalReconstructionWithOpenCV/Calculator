@@ -12,8 +12,6 @@ from Setting import DefineManager
 
 import GetContour
 
-from matplotlib import pyplot
-
 def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     targetEqualizeGrayImage = GetContour.GetMeanRateImage(targetGrayImage)
@@ -102,25 +100,24 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
+    drawImage = np.copy(perspectiveUpdatedBeforeImage)
     for index in range(len(importantPoint)):
         xArray = []
         yArray = []
-        drawImage = np.copy(perspectiveUpdatedBeforeImage)
         for point in importantPoint[index]:
             x, y = point.ravel()
             xArray.append(x)
             yArray.append(y)
-        print index
         xArray = np.asarray(xArray)
         yArray = np.asarray(yArray)
         if xArray.shape[0]>0:
             functionCharacteristic = sp.polyfit(xArray,yArray,DefineManager.FUNCTION_DIMENSION)
             yRegressionArray = sp.polyval(functionCharacteristic,xArray)
             err = np.sqrt(sum((yArray-yRegressionArray)**2)/yArray.shape[0])
-            #pyplot.plot(xArray, yArray)
-            pyplot.plot(xArray, yRegressionArray)
+            pointA, pointB = GetContour.GetStartAndEndPointsFromLine(functionCharacteristic, xArray)
+            cv2.line(drawImage, pointA, pointB, DefineManager.RGB_COLOR_GREEN, 1)
 
-    pyplot.show()
+    CustomOpenCV.ShowImagesWithName([drawImage])
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
 

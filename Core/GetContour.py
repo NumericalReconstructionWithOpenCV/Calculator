@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+import scipy as sp
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
+addLength = 5
 def GetStartAndEndPointsFromLine(functionCharacteristc, xArray):
-    xArray
+    xMin = max(np.min(xArray) - addLength, 0)
+    xMax = min(np.max(xArray) + addLength, Setting.DefineManager.IMAGE_WIDTH)
+    xArray = np.asarray([xMin,xMax])
+    yArray = sp.polyval(functionCharacteristc, xArray)
+    return (int(xArray[0]), int(yArray[0])), (int(xArray[1]), int(yArray[1]))
 
 def FindNavel(contours, drawImage):
     minX = drawImage.shape[1]
@@ -20,7 +26,7 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO))
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO)) + 25
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
 
