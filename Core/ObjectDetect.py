@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+import scipy as sp
 
 import ImageMatrixMove
 import Setting.DefineManager
@@ -10,6 +11,8 @@ from Utils import LogManager, CustomOpenCV
 from Setting import DefineManager
 
 import GetContour
+
+from matplotlib import pyplot
 
 def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
@@ -99,14 +102,25 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
-    pointAngle = importantPoint
-
-    colorSize = int(100 / len(pointAngle))
-    print pointAngle[0]
-    for index in range(len(pointAngle)):
+    for index in range(len(importantPoint)):
+        xArray = []
+        yArray = []
         drawImage = np.copy(perspectiveUpdatedBeforeImage)
-        for point in pointAngle[index]:
+        for point in importantPoint[index]:
             x, y = point.ravel()
+            xArray.append(x)
+            yArray.append(y)
+        print index
+        xArray = np.asarray(xArray)
+        yArray = np.asarray(yArray)
+        if xArray.shape[0]>0:
+            functionCharacteristic = sp.polyfit(xArray,yArray,DefineManager.FUNCTION_DIMENSION)
+            yRegressionArray = sp.polyval(functionCharacteristic,xArray)
+            err = np.sqrt(sum((yArray-yRegressionArray)**2)/yArray.shape[0])
+            #pyplot.plot(xArray, yArray)
+            pyplot.plot(xArray, yRegressionArray)
+
+    pyplot.show()
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
 

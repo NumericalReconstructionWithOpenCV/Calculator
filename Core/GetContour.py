@@ -4,6 +4,9 @@ import numpy as np
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
+def GetStartAndEndPointsFromLine(functionCharacteristc, xArray):
+    xArray
+
 def FindNavel(contours, drawImage):
     minX = drawImage.shape[1]
     maxX = 0
@@ -226,6 +229,7 @@ def FillDifferenceImage(differenceImage):
     afterDifference = afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
     Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width]
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
+    afterDifference[height - 1] = 0
 
     ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
     return afterDifference
