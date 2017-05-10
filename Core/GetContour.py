@@ -5,12 +5,13 @@ import scipy as sp
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
-addLength = 5
-def GetStartAndEndPointsFromLine(functionCharacteristc, xArray):
+def GetStartAndEndPointsFromLine(functionCharacteristic, xArray):
+    tangent = 1.0/np.sqrt(1 + functionCharacteristic[0]**2)
+    addLength = Setting.DefineManager.ADD_LINE_LENGTH * tangent
     xMin = max(np.min(xArray) - addLength, 0)
     xMax = min(np.max(xArray) + addLength, Setting.DefineManager.IMAGE_WIDTH)
     xArray = np.asarray([xMin,xMax])
-    yArray = sp.polyval(functionCharacteristc, xArray)
+    yArray = sp.polyval(functionCharacteristic, xArray)
     return (int(xArray[0]), int(yArray[0])), (int(xArray[1]), int(yArray[1]))
 
 def FindNavel(contours, drawImage):
