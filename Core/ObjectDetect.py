@@ -113,10 +113,12 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
         xArray = np.asarray(xArray)
         yArray = np.asarray(yArray)
         if xArray.shape[0]>0:
+            # ax + b = y (a, b 를 받아옴)
             functionCharacteristic = sp.polyfit(xArray,yArray,DefineManager.FUNCTION_DIMENSION)
             yRegressionArray = sp.polyval(functionCharacteristic,xArray)
             err = np.sqrt(sum((yArray-yRegressionArray)**2)/yArray.shape[0])
             pointA, pointB = GetContour.GetStartAndEndPointsFromLine(functionCharacteristic, xArray)
+
             cv2.line(drawImage, pointA, pointB, DefineManager.RGB_COLOR_GREEN, 1)
 
     CustomOpenCV.ShowImagesWithName([drawImage])
