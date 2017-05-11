@@ -59,8 +59,8 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     afterImage = CustomOpenCV.ResizeImageAsRate(afterImage,resizeRate)
     afterGrayImage = CustomOpenCV.ResizeImageAsRate(afterGrayImage,resizeRate)
 
-    squareContourData = DetectBackgroundSquare.DetectBackgroundSquareFromImage(beforeImage) #형광색 인식으로 점 4개 찾는 함수
-    #squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
+    #squareContourData = DetectBackgroundSquare.DetectBackgroundSquareFromImage(beforeImage) #형광색 인식으로 점 4개 찾는 함수
+    squareContourData = DetectBlackBoardContourFromOriginImage(beforeGrayImage)
 
     # 굴곡진 큰 사각형 정사각형으로 보정
     perspectiveUpdatedBeforeImage = ImageMatrixMove.ImageMatrixMove(beforeImage, squareContourData)
