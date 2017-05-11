@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+import scipy as sp
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
+
+def GetStartAndEndPointsFromLine(functionCharacteristic, xArray):
+    tangent = 1.0/np.sqrt(1 + functionCharacteristic[0]**2)
+    addLength = Setting.DefineManager.ADD_LINE_LENGTH * tangent
+    xMin = max(np.min(xArray) - addLength, 0)
+    xMax = min(np.max(xArray) + addLength, Setting.DefineManager.IMAGE_WIDTH)
+    xArray = np.asarray([xMin,xMax])
+    yArray = sp.polyval(functionCharacteristic, xArray)
+    return (int(xArray[0]), int(yArray[0])), (int(xArray[1]), int(yArray[1]))
 
 def FindNavel(contours, drawImage):
     minX = drawImage.shape[1]
@@ -17,31 +27,42 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO))
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO)) + 25
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
 
 def AngleAsDealWithPointFromContours(contours, drawImage):
     pointAngle = []
+    union = []
     for contourIndex in contours:
         length = len(contourIndex)
         strideKey = max(length / Setting.DefineManager.RESEARCH_ANGLE_COUNT,Setting.DefineManager.MINIMUM_STRIDE_KEY)
         beforeAngle = 0.0
-        for index in range(int(length/strideKey) + 1):
-            pointA = contourIndex[((index-1) * strideKey)%length].ravel()
-            pointB = contourIndex[((index) * strideKey)%length].ravel()
-            pointC = contourIndex[((index+1) * strideKey)%length].ravel()
+        for index in range(int(length/strideKey)):
+            indexA = (index - 1) * strideKey
+            indexB = (index) * strideKey
+            indexC = (index + 1) * strideKey
+            if indexA < indexB:
+                for pointIndex in range(indexA, indexB):
+                    union.append(contourIndex[pointIndex % length].ravel())
+            pointA = contourIndex[indexA % length].ravel()
+            pointB = contourIndex[indexB % length].ravel()
+            pointC = contourIndex[indexC % length].ravel()
             x, y = pointB.ravel()
             cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_BLUE, -1)
             nowAngle = AngleBetweenThreePoints(pointA,pointB,pointC)
             absAngle = abs(beforeAngle - nowAngle)
             if absAngle > Setting.DefineManager.ANGLE_AS_DEAL_WITH_POINT :
-                pointAngle.append(np.asarray([pointB]))
+                union.append(pointB)
+                pointAngle.append(union)
+                union = []
                 angleText = str(int(nowAngle)) + "," + str(int(absAngle))
                 thickness = 0.3
                 cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_RED, -1)
                 cv2.putText(drawImage, angleText,(x,y),0, thickness,Setting.DefineManager.RGB_COLOR_WHITE)
             beforeAngle = nowAngle
+    pointAngle.append(union)
+
     ccv.ShowImagesWithName([drawImage],['PointImage'])
     return pointAngle
 
@@ -209,12 +230,13 @@ def FillDifferenceImage(differenceImage):
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contourLength = len(GetContour(afterDifference)[0])
-        ccv.ShowImagesWithName([beforeDifference,afterDifference],[],700)
+        #ccv.ShowImagesWithName([beforeDifference,afterDifference],[],700)
         if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
     afterDifference = afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
     Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width]
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
+    afterDifference[height - 1] = 0
 
     ccv.ShowImagesWithName([differenceImage, afterDifference, finalDifference],['Before','After', 'Added'])
     return afterDifference

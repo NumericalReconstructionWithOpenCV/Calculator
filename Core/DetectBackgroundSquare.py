@@ -27,7 +27,7 @@ def DetectBackgroundSquareFromImage(image):
 
     ctrNp = np.array(centerPoint).reshape((-1,1,2)).astype(np.int32)
     #cv2.imwrite("../Tests/practice/out1.jpg", imageFromDetectedColor)
-    cv2.imshow("abcdef", imageFromDetectedColor)
+    #cv2.imshow("abcdef", imageFromDetectedColor)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.waitKey(1)

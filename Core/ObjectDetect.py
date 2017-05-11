@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+import scipy as sp
 
 import ImageMatrixMove
 import Setting.DefineManager
@@ -98,6 +99,25 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     humanDetectedContour, contourLineDrawImage = GetContour.GetContour(objectFoundedImage, perspectiveUpdatedAfterImage)
     GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
+
+    drawImage = np.copy(perspectiveUpdatedBeforeImage)
+    for index in range(len(importantPoint)):
+        xArray = []
+        yArray = []
+        for point in importantPoint[index]:
+            x, y = point.ravel()
+            xArray.append(x)
+            yArray.append(y)
+        xArray = np.asarray(xArray)
+        yArray = np.asarray(yArray)
+        if xArray.shape[0]>0:
+            functionCharacteristic = sp.polyfit(xArray,yArray,DefineManager.FUNCTION_DIMENSION)
+            yRegressionArray = sp.polyval(functionCharacteristic,xArray)
+            err = np.sqrt(sum((yArray-yRegressionArray)**2)/yArray.shape[0])
+            pointA, pointB = GetContour.GetStartAndEndPointsFromLine(functionCharacteristic, xArray)
+            cv2.line(drawImage, pointA, pointB, DefineManager.RGB_COLOR_GREEN, 1)
+
+    CustomOpenCV.ShowImagesWithName([drawImage])
 
     return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
 
