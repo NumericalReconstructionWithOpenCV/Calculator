@@ -209,6 +209,7 @@ def SimplifyImage(image):
 # 이러한 이미지의 외곽선을 추출하여 외곽선 영역의 갯수를 구한다
 # 영역 갯수가 Setting.DefineManager.END_CONTOUR_COUNT보다 작으면 반복문을 종료한다
 # =====(반복문)=====
+# 이미지를 매끄럽기 위한 작업을 한다
 # finalDifference는 처음 받은 differenceImage와 수정한 이미지인 afterDifference의 개선(쇠퇴)부분을 보여준다
 def FillDifferenceImage(differenceImage):
     height, width = differenceImage.shape[:]
@@ -220,9 +221,9 @@ def FillDifferenceImage(differenceImage):
     afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
     Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width] = differenceImage[:]
     beforeDifference = np.ndarray(afterDifference.shape)
-    alpha = 10
+
     while True:
-        kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE + alpha,Setting.DefineManager.MORPHOLOGY_MASK_SIZE + alpha), np.uint8)
+        kernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
         beforeDifference = np.copy(afterDifference)
         afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
         afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.WIDTH_MASK_SIZE
@@ -230,9 +231,17 @@ def FillDifferenceImage(differenceImage):
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contourLength = len(GetContour(afterDifference)[0])
-        #ccv.ShowImagesWithName([beforeDifference,afterDifference],[],700)
         if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
+
+    for index in range(10):
+        afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
+        afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.SQUARE_MASK_SIZE
+                                                             , Setting.DefineManager.SQUARE_MASK_SIZE), 0)
+        thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
+                                                , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        contourLength = len(GetContour(afterDifference)[0])
+
     afterDifference = afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
     Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width]
     finalDifference = cv2.absdiff(differenceImage, afterDifference)
