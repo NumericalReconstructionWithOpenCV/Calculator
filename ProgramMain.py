@@ -22,9 +22,13 @@ afterTargetImage = FileIO.LoadImage(DefineManager.TESTCASE_AFTER_IMAGE_PATH)
 beforeTargetGrayImage = FileIO.LoadImageAsGray(DefineManager.TESTCASE_BEFORE_IMAGE_PATH)
 afterTargetGrayImage = FileIO.LoadImageAsGray(DefineManager.TESTCASE_AFTER_IMAGE_PATH)
 
+objectDetectResult = []
 functionParameter = []
+positionDatas = []
 
-functionParameter = ObjectDetect.DetectObjectFromImage(beforeTargetImage, afterTargetImage, beforeTargetGrayImage, afterTargetGrayImage)[4]
-RecoverTheLengthModule.GetFunctionCrossPosition(functionParameter)
+objectDetectResult = ObjectDetect.DetectObjectFromImage(beforeTargetImage, afterTargetImage, beforeTargetGrayImage, afterTargetGrayImage)
+functionParameter = objectDetectResult[4]
+positionDatas = RecoverTheLengthModule.GetFunctionCrossPosition(functionParameter)
+RecoverTheLengthModule.DrawPointToImage(positionDatas, objectDetectResult[5])
 
 #FindCorner.FindCornerFromImage(Setting.DefineManager.FIND_CORNER_TESTCASE_PATH)

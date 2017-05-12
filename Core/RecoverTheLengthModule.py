@@ -1,4 +1,6 @@
 from Setting import DefineManager
+from Utils import CustomOpenCV
+import cv2
 
 def GetFunctionCrossPosition(functionParameter):
     print "GetFunctionCrossPosition"
@@ -27,3 +29,10 @@ def CalculateCrossPosition(beforeParameter, afterParameter):
     position[DefineManager.Y_POSITION_SAVE_POINT] = beforeParameter[DefineManager.INCLINATION_SAVE_POINT] * position[DefineManager.X_POSITION_SAVE_POINT] + beforeParameter[DefineManager.CONSTANT_VALUE_SAVE_POINT]
     print position
     return position
+
+def DrawPointToImage(positionData, imageData):
+    print "DrawPointToImage"
+    for eachPosition in positionData:
+        cv2.circle(imageData, (int(eachPosition[DefineManager.X_POSITION_SAVE_POINT]), int(eachPosition[DefineManager.Y_POSITION_SAVE_POINT])),
+                   2, DefineManager.RGB_COLOR_RED, -1)
+    CustomOpenCV.ShowImagesWithName([imageData])
