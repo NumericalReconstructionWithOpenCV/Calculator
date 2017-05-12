@@ -3,7 +3,7 @@ import unittest
 import cv2
 
 from Setting import DefineManager
-from Core import FindCorner, ObjectDetect
+from Core import FindCorner, ObjectDetect, RecoverTheLengthModule
 from Utils import FileIO
 
 
@@ -22,6 +22,13 @@ afterTargetImage = FileIO.LoadImage(DefineManager.TESTCASE_AFTER_IMAGE_PATH)
 beforeTargetGrayImage = FileIO.LoadImageAsGray(DefineManager.TESTCASE_BEFORE_IMAGE_PATH)
 afterTargetGrayImage = FileIO.LoadImageAsGray(DefineManager.TESTCASE_AFTER_IMAGE_PATH)
 
-ObjectDetect.DetectObjectFromImage(beforeTargetImage, afterTargetImage, beforeTargetGrayImage, afterTargetGrayImage)
+objectDetectResult = []
+functionParameter = []
+positionDatas = []
+
+objectDetectResult = ObjectDetect.DetectObjectFromImage(beforeTargetImage, afterTargetImage, beforeTargetGrayImage, afterTargetGrayImage)
+functionParameter = objectDetectResult[4]
+positionDatas = RecoverTheLengthModule.GetFunctionCrossPosition(functionParameter)
+RecoverTheLengthModule.DrawPointToImage(positionDatas, objectDetectResult[5])
 
 #FindCorner.FindCornerFromImage(Setting.DefineManager.FIND_CORNER_TESTCASE_PATH)

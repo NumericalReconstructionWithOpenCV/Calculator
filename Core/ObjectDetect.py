@@ -103,6 +103,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
     drawImage = np.copy(perspectiveUpdatedBeforeImage)
+    functionParameter = []
     for index in range(len(importantPoint)):
         xArray = []
         yArray = []
@@ -115,6 +116,8 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
         if xArray.shape[0]>0:
             # ax + b = y (a, b 를 받아옴)
             functionCharacteristic = sp.polyfit(xArray,yArray,DefineManager.FUNCTION_DIMENSION)
+            print functionCharacteristic
+            functionParameter.append(functionCharacteristic)
             yRegressionArray = sp.polyval(functionCharacteristic,xArray)
             err = np.sqrt(sum((yArray-yRegressionArray)**2)/yArray.shape[0])
             pointA, pointB = GetContour.GetStartAndEndPointsFromLine(functionCharacteristic, xArray)
@@ -123,7 +126,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
 
     CustomOpenCV.ShowImagesWithName([drawImage])
 
-    return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour]
+    return [beforeThresholdedBlackBoardImage, afterThresholdedBlackBoardImage, differenceBasedOnThreshImage, humanDetectedContour, functionParameter, drawImage]
 
 def FindSmallBoxesFromBlackBoardImage(perspectiveUpdatedBeforeImage):
     # 작은 사각형과 그 모서리 찾기
