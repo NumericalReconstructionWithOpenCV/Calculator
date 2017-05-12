@@ -28,6 +28,7 @@ positionDatas = []
 
 objectDetectResult = ObjectDetect.DetectObjectFromImage(beforeTargetImage, afterTargetImage, beforeTargetGrayImage, afterTargetGrayImage)
 functionParameter = objectDetectResult[4]
+drawImage = objectDetectResult[5]
 positionDatas = RecoverTheLengthModule.GetFunctionCrossPosition(functionParameter)
 RecoverTheLengthModule.DrawPointToImage(positionDatas, objectDetectResult[5])
 

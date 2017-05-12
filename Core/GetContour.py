@@ -27,40 +27,41 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO)) + 25
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO))
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
+    return [x,y]
 
 def AngleAsDealWithPointFromContours(contours, drawImage):
     pointAngle = []
     union = []
-    for contourIndex in contours:
-        length = len(contourIndex)
-        strideKey = max(length / Setting.DefineManager.RESEARCH_ANGLE_COUNT,Setting.DefineManager.MINIMUM_STRIDE_KEY)
-        beforeAngle = 0.0
-        for index in range(int(length/strideKey)):
-            indexA = (index - 1) * strideKey
-            indexB = (index) * strideKey
-            indexC = (index + 1) * strideKey
-            if indexA < indexB:
-                for pointIndex in range(indexA, indexB):
-                    union.append(contourIndex[pointIndex % length].ravel())
-            pointA = contourIndex[indexA % length].ravel()
-            pointB = contourIndex[indexB % length].ravel()
-            pointC = contourIndex[indexC % length].ravel()
-            x, y = pointB.ravel()
-            cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_BLUE, -1)
-            nowAngle = AngleBetweenThreePoints(pointA,pointB,pointC)
-            absAngle = abs(beforeAngle - nowAngle)
-            if absAngle > Setting.DefineManager.ANGLE_AS_DEAL_WITH_POINT :
-                union.append(pointB)
-                pointAngle.append(union)
-                union = []
-                angleText = str(int(nowAngle)) + "," + str(int(absAngle))
-                thickness = 0.3
-                cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_RED, -1)
-                cv2.putText(drawImage, angleText,(x,y),0, thickness,Setting.DefineManager.RGB_COLOR_WHITE)
-            beforeAngle = nowAngle
+    contourIndex = contours[0]
+    length = len(contourIndex)
+    strideKey = Setting.DefineManager.MINIMUM_STRIDE_KEY
+    beforeAngle = 0.0
+    for index in range(int(length/strideKey)):
+        indexA = (index - 1) * strideKey
+        indexB = (index) * strideKey
+        indexC = (index + 1) * strideKey
+        if indexA < indexB:
+            for pointIndex in range(indexA, indexB):
+                union.append(contourIndex[pointIndex % length].ravel())
+        pointA = contourIndex[indexA % length].ravel()
+        pointB = contourIndex[indexB % length].ravel()
+        pointC = contourIndex[indexC % length].ravel()
+        x, y = pointB.ravel()
+        cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_BLUE, -1)
+        nowAngle = AngleBetweenThreePoints(pointA,pointB,pointC)
+        absAngle = abs(beforeAngle - nowAngle)
+        if absAngle > Setting.DefineManager.ANGLE_AS_DEAL_WITH_POINT :
+            union.append(pointB)
+            pointAngle.append(union)
+            union = []
+            angleText = str(int(nowAngle)) + "," + str(int(absAngle))
+            thickness = 0.3
+            cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_RED, -1)
+            cv2.putText(drawImage, angleText,(x,y),0, thickness,Setting.DefineManager.RGB_COLOR_WHITE)
+        beforeAngle = nowAngle
     pointAngle.append(union)
 
     ccv.ShowImagesWithName([drawImage],['PointImage'])
@@ -237,7 +238,7 @@ def FillDifferenceImage(differenceImage):
     for index in range(10):
         afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
         afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.SQUARE_MASK_SIZE
-                                                             , Setting.DefineManager.SQUARE_MASK_SIZE), 0)
+                                                             , Setting.DefineManager.SQUARE_MASK_SIZE + 8), 0)
         thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
                                                 , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contourLength = len(GetContour(afterDifference)[0])
