@@ -27,7 +27,7 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO))
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO)) + 25
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
     return [x,y]
@@ -97,7 +97,7 @@ def LengthBetweenTwoDots(point1, point2):
 # cv2.addWeighted(image1, alpha,image2, beta, gamma) = image1 * alpha + image2 * beta + gamma
 def GetMeanRateImage(researchImage):
     histImage = cv2.equalizeHist(researchImage)
-    blurImage = cv2.GaussianBlur(researchImage,(0,0), Setting.DefineManager.SIGMA)
+    blurImage = cv2.GaussianBlur(researchImage, (0,0), Setting.DefineManager.SIGMA)
     rateImage = histImage.astype(float)
     argument = rateImage.shape[0] * rateImage.shape[1]
     mean =  np.sum(rateImage) / argument

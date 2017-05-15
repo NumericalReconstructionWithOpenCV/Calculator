@@ -33,6 +33,8 @@ def CalculateCrossPosition(beforeParameter, afterParameter):
 def DrawPointToImage(positionData, imageData):
     print "DrawPointToImage"
     drawImage = np.copy(imageData)
+    gaussianImage = np.copy(imageData)
+    gaussianImage[:] = 0
     height, width = drawImage.shape[:2]
     index = 0
     for eachPosition in positionData:
@@ -42,7 +44,11 @@ def DrawPointToImage(positionData, imageData):
             continue
         cv2.circle(imageData, (int(eachPosition[DefineManager.X_POSITION_SAVE_POINT]), int(eachPosition[DefineManager.Y_POSITION_SAVE_POINT])),
                    2, DefineManager.RGB_COLOR_RED, -1)
+        cv2.circle(gaussianImage, (int(eachPosition[DefineManager.X_POSITION_SAVE_POINT]), int(eachPosition[DefineManager.Y_POSITION_SAVE_POINT])),
+                   15, DefineManager.RGB_COLOR_WHITE, -1)
         cv2.putText(imageData, str(index), (int(eachPosition[DefineManager.X_POSITION_SAVE_POINT]), int(eachPosition[DefineManager.Y_POSITION_SAVE_POINT])),
                     cv2.FONT_HERSHEY_COMPLEX,0.3,DefineManager.RGB_COLOR_WHITE)
         index = index + 1
+    gaussianImage = cv2.GaussianBlur(gaussianImage, (81, 81), 0)
     CustomOpenCV.ShowImagesWithName([imageData])
+    CustomOpenCV.ShowImagesWithName([gaussianImage])
