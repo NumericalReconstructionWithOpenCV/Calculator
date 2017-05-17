@@ -19,7 +19,7 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
     morpholgyKernel = np.ones((Setting.DefineManager.MORPHOLOGY_MASK_SIZE, Setting.DefineManager.MORPHOLOGY_MASK_SIZE), np.uint8)
     targetMorphologyGrayImage = cv2.morphologyEx(targetEqualizeGrayImage, cv2.MORPH_OPEN, morpholgyKernel)
 
-    #CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
+    CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetMorphologyGrayImage,0.5)], ["targetEdgeMorphologyGrayImage"])
     # Reduce image noise
 
     targetMorphologyGrayImage = cv2.adaptiveThreshold(targetMorphologyGrayImage, Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.ADAPTIVE_THRESH_MEAN_C,
@@ -28,7 +28,7 @@ def DetectBlackBoardContourFromOriginImage(targetGrayImage):
 
     targetEdgeMorphologyGrayImage = cv2.Canny(targetMorphologyGrayImage, Setting.DefineManager.CANNY_MINIMUM_THRESHOLD, Setting.DefineManager.CANNY_MAXIMUM_THRESHOLD, apertureSize = 5)
 
-    #CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetEdgeMorphologyGrayImage,0.7)], ["targetEdgeMorphologyGrayImage"])
+    CustomOpenCV.ShowImagesWithName([CustomOpenCV.ResizeImageAsRate(targetEdgeMorphologyGrayImage,0.5)], ["targetEdgeMorphologyGrayImage"])
 
     # Edge detect from bulr processed image
     (_, beforeEdgeGrayImageContour, h) = cv2.findContours(targetEdgeMorphologyGrayImage, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -99,7 +99,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     objectFoundedImage = GetContour.GetObjectImage(perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage)
 
     humanDetectedContour, contourLineDrawImage = GetContour.GetContour(objectFoundedImage, perspectiveUpdatedAfterImage)
-    GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
+    navelPoint, height = GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
     beforeDrawImage = np.copy(perspectiveUpdatedBeforeImage)
@@ -127,7 +127,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
 
     CustomOpenCV.ShowImagesWithName([beforeDrawImage,afterDrawImage])
 
-    return [perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage, differenceBasedOnThreshImage, humanDetectedContour, functionParameter, beforeDrawImage]
+    return [perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage, height, navelPoint, humanDetectedContour, functionParameter, beforeDrawImage]
 
 def FindSmallBoxesFromBlackBoardImage(perspectiveUpdatedBeforeImage):
     # 작은 사각형과 그 모서리 찾기

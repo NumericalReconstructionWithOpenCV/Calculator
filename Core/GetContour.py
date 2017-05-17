@@ -27,10 +27,10 @@ def FindNavel(contours, drawImage):
             minY = min(minY,y)
             maxY = max(maxY,y)
     x = int((minX + maxX) / 2)
-    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.GOLDEN_RATIO)) + 25
+    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.KOREAN_GOLDEN_RATIO))
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
-    return [x,y]
+    return (x,y), (maxY - minY)
 
 def AngleAsDealWithPointFromContours(contours, drawImage):
     pointAngle = []
@@ -235,7 +235,7 @@ def FillDifferenceImage(differenceImage):
         if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
 
-    for index in range(10):
+    for index in range(5):
         afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
         afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.SQUARE_MASK_SIZE
                                                              , Setting.DefineManager.SQUARE_MASK_SIZE + 8), 0)

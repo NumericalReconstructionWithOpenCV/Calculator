@@ -27,9 +27,12 @@ functionParameter = []
 positionDatas = []
 
 objectDetectResult = ObjectDetect.DetectObjectFromImage(beforeTargetImage, afterTargetImage, beforeTargetGrayImage, afterTargetGrayImage)
-functionParameter = objectDetectResult[4]
-drawImage = objectDetectResult[5]
+bodyHeight = objectDetectResult[2]
+navelPoint = objectDetectResult[3]
+functionParameter = objectDetectResult[5]
+drawImage = objectDetectResult[6]
 positionDatas = RecoverTheLengthModule.GetFunctionCrossPosition(functionParameter)
-RecoverTheLengthModule.DrawPointToImage(positionDatas, objectDetectResult[5])
+RecoverTheLengthModule.DrawPointToImage(positionDatas, drawImage)
+RecoverTheLengthModule.BodyLineDraw(bodyHeight, navelPoint, objectDetectResult[1])
 
 #FindCorner.FindCornerFromImage(Setting.DefineManager.FIND_CORNER_TESTCASE_PATH)
