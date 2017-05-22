@@ -5,6 +5,21 @@ import scipy as sp
 import Utils.CustomOpenCV as ccv
 import Setting.DefineManager
 
+def DetectFaceAndGetY(image):
+    face_cascade = cv2.CascadeClassifier('C:/OpenCV3.1.0/build/etc/haarcascades/haarcascade_frontalface_default.xml')
+    grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(grayImage, 1.3, 5)
+    x,y,w,h = (0,0,0,0)
+    '''
+    # Draw a rectangle around the faces
+    for (x, y, w, h) in faces:
+        cv2.rectangle(grayImage, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    ccv.ShowImagesWithName([grayImage])
+    '''
+    if len(faces)>0:
+         x,y,w,h = faces[0].ravel()
+    return y, y + h
+
 def GetStartAndEndPointsFromLine(functionCharacteristic, xArray):
     tangent = 1.0/np.sqrt(1 + functionCharacteristic[0]**2)
     addLength = Setting.DefineManager.ADD_LINE_LENGTH * tangent
@@ -14,7 +29,7 @@ def GetStartAndEndPointsFromLine(functionCharacteristic, xArray):
     yArray = sp.polyval(functionCharacteristic, xArray)
     return (int(xArray[0]), int(yArray[0])), (int(xArray[1]), int(yArray[1]))
 
-def FindNavel(contours, drawImage):
+def FindNavel(contours, faceMaxY, drawImage):
     minX = drawImage.shape[1]
     maxX = 0
     maxY = 0
@@ -26,11 +41,17 @@ def FindNavel(contours, drawImage):
             maxX = max(maxX,x)
             minY = min(minY,y)
             maxY = max(maxY,y)
+    if faceMaxY > 0:
+        faceRate = float(faceMaxY - minY) / float(maxY - minY)
+    else:
+        faceRate = 1 / 8
+    eachGoldenRatio = (Setting.DefineManager.GOLDEN_RATIO / 8) / faceRate
+    print eachGoldenRatio
     x = int((minX + maxX) / 2)
-    y = int((minY * Setting.DefineManager.GOLDEN_RATIO + maxY)/(1 + Setting.DefineManager.KOREAN_GOLDEN_RATIO))
+    y = int((minY * eachGoldenRatio + maxY)/(1 + eachGoldenRatio))
     thickness = 0.3
     cv2.circle(drawImage, (x,y), 2, Setting.DefineManager.RGB_COLOR_GREEN, -1)
-    return (x,y), (maxY - minY)
+    return (x,y), faceRate, maxY, minY
 
 def AngleAsDealWithPointFromContours(contours, drawImage):
     pointAngle = []
@@ -234,14 +255,6 @@ def FillDifferenceImage(differenceImage):
         contourLength = len(GetContour(afterDifference)[0])
         if contourLength < Setting.DefineManager.END_CONTOUR_COUNT:
             break
-
-    for index in range(5):
-        afterDifference = cv2.morphologyEx(afterDifference, cv2.MORPH_CLOSE, kernel)
-        afterDifference = cv2.GaussianBlur(afterDifference, (Setting.DefineManager.SQUARE_MASK_SIZE
-                                                             , Setting.DefineManager.SQUARE_MASK_SIZE + 8), 0)
-        thresh, afterDifference = cv2.threshold(afterDifference, Setting.DefineManager.THRESHOLD
-                                                , Setting.DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        contourLength = len(GetContour(afterDifference)[0])
 
     afterDifference = afterDifference[Setting.DefineManager.ADD_IMAGE_HEIGHT:Setting.DefineManager.ADD_IMAGE_HEIGHT + height,
     Setting.DefineManager.ADD_IMAGE_WIDTH:Setting.DefineManager.ADD_IMAGE_WIDTH + width]

@@ -54,14 +54,11 @@ def DrawPointToImage(positionData, imageData):
     #gaussianImage = cv2.GaussianBlur(cv2.cvtColor(gaussianImage,cv2.COLOR_BGR2GRAY), (11, 11), 0)
     #thresh, gaussianImage = cv2.threshold(gaussianImage, 150, DefineManager.SET_IMAGE_WHITE_COLOR, cv2.THRESH_BINARY)
 
-
-ratio = 0.149
-eighthRatio = 0.125
-def BodyLineDraw(bodyHeight, navelPoint, image):
+def BodyLineDraw(bodyHeight, navelPoint, faceRate, image):
     drawImage = np.copy(image)
     imageHeight, imageWidth = drawImage.shape[:2]
-    ratioLength = int(bodyHeight * ratio)
-    eighthRatioLength = int(bodyHeight * eighthRatio)
+    ratioLength = int(bodyHeight * faceRate)
+    eighthRatioLength = int(bodyHeight * DefineManager.EIGHT_RATIO)
     cv2.line(drawImage, (navelPoint[0],0), (navelPoint[0],imageHeight), DefineManager.RGB_COLOR_GREEN, 1)
     # 배꼽 세로 선
     cv2.line(drawImage, (0, navelPoint[1]), (imageWidth, navelPoint[1]), DefineManager.RGB_COLOR_GREEN, 1)

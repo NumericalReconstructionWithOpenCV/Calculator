@@ -99,7 +99,9 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
     objectFoundedImage = GetContour.GetObjectImage(perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage)
 
     humanDetectedContour, contourLineDrawImage = GetContour.GetContour(objectFoundedImage, perspectiveUpdatedAfterImage)
-    navelPoint, height = GetContour.FindNavel(humanDetectedContour,contourLineDrawImage)
+    faceMinY, faceMaxY = GetContour.DetectFaceAndGetY(perspectiveUpdatedAfterImage)
+    navelPoint, faceRate, maxY, minY = GetContour.FindNavel(humanDetectedContour,faceMaxY, contourLineDrawImage)
+    height = maxY - minY
     importantPoint = GetContour.AngleAsDealWithPointFromContours(humanDetectedContour,contourLineDrawImage)
 
     beforeDrawImage = np.copy(perspectiveUpdatedBeforeImage)
@@ -127,7 +129,7 @@ def DetectObjectFromImage(beforeImage, afterImage, beforeGrayImage, afterGrayIma
 
     CustomOpenCV.ShowImagesWithName([beforeDrawImage,afterDrawImage])
 
-    return [perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage, height, navelPoint, humanDetectedContour, functionParameter, beforeDrawImage]
+    return [perspectiveUpdatedBeforeImage, perspectiveUpdatedAfterImage, height, navelPoint, humanDetectedContour, functionParameter, beforeDrawImage, faceRate]
 
 def FindSmallBoxesFromBlackBoardImage(perspectiveUpdatedBeforeImage):
     # 작은 사각형과 그 모서리 찾기
